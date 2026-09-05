@@ -9,7 +9,6 @@ interface Vm {
     function expectRevert() external;
     function expectRevert(bytes4) external;
     function assume(bool) external;
-    function targetContract(address) external;
 }
 
 abstract contract TestBase {

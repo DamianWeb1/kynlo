@@ -403,7 +403,7 @@ contract KynloVaultAssetTest is KynloTestBase {
 }
 
 contract KynloVaultTokenFailureTest is KynloTestBase {
-    function testFailedDepositTransferFromLeavesNoPositionOrAttribution() public {
+    function testDepositTransferFromFailureLeavesNoPositionOrAttribution() public {
         uint256 planId = _create();
         stock.setBlockedReceiver(address(vault), true);
         vm.startPrank(OWNER);
@@ -527,7 +527,7 @@ contract KynloVaultClaimsTest is KynloTestBase {
         vault.claim(planId, address(stock));
     }
 
-    function testFailedPolicyTransferPreservesClaimAndDistributionBase() public {
+    function testPolicyBlockedClaimPreservesEntitlementAndDistributionBase() public {
         uint256 planId = _activePlan(100);
         _mature(planId);
         stock.setBlockedReceiver(SUCCESSOR_A, true);

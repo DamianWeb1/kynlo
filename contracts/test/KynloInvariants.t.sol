@@ -42,6 +42,7 @@ contract KynloVaultInvariantTest is TestBase {
     KynloVault internal vault;
     MockPolicyToken internal token;
     VaultAccountingHandler internal handler;
+    address[] internal invariantTargets;
 
     function setUp() public {
         registry = new KynloAssetRegistry(address(this));
@@ -50,7 +51,11 @@ contract KynloVaultInvariantTest is TestBase {
         registry.setSupportedStock(address(token), true);
         handler = new VaultAccountingHandler(vault, token);
         token.mint(address(handler), type(uint96).max);
-        vm.targetContract(address(handler));
+        invariantTargets.push(address(handler));
+    }
+
+    function targetContracts() public view returns (address[] memory) {
+        return invariantTargets;
     }
 
     function invariant_attributionEqualsPositionAccounting() public view {
