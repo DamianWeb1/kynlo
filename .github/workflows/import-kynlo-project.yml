@@ -1,0 +1,58 @@
+name: Import Kynlo Project
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/import-kynlo-project.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  import-project:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify archive exists
+        run: test -f kynlo-project.zip
+
+      - name: Inspect archive for forbidden paths
+        shell: bash
+        run: |
+          set -euo pipefail
+          unzip -Z1 kynlo-project.zip > /tmp/kynlo-files.txt
+          if grep -E '(^|/)(\.env($|\.)|node_modules/|coverage/|cache/|\.cache/|dist/|out/|broadcast/|\.git/)' /tmp/kynlo-files.txt; then
+            echo 'Forbidden path found in archive.'
+            exit 1
+          fi
+          if ! grep -qx '.github/workflows/contracts-ci.yml' /tmp/kynlo-files.txt; then
+            echo 'contracts-ci.yml missing from archive.'
+            exit 1
+          fi
+
+      - name: Extract project
+        shell: bash
+        run: |
+          set -euo pipefail
+          unzip -o kynlo-project.zip -d .
+          rm -f kynlo-project.zip
+          test -f .github/workflows/contracts-ci.yml
+          test -f contracts/src/KynloVault.sol
+          test -f contracts/src/KynloAssetRegistry.sol
+
+      - name: Commit imported project
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          if git diff --cached --quiet; then
+            echo 'No project changes to commit.'
+            exit 0
+          fi
+          git commit -m 'Import complete Kynlo project'
+          git push origin main
