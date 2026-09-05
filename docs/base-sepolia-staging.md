@@ -4,6 +4,46 @@ Base Sepolia uses chain ID `84532`. The deployed `KynloVault` is the production 
 same 90-day inactivity minimum and 30-day Protection Window minimum. No accelerated constants are
 compiled into the production deployment.
 
+## Protected GitHub deployment
+
+The manual `Kynlo Base Sepolia Staging` workflow is separate from the permanent contract security
+gate. It never runs on a push or pull request. It requires the protected `base-sepolia` GitHub
+environment and the exact confirmation text `DEPLOY_BASE_SEPOLIA` before broadcasting.
+
+Configure these environment secrets:
+
+- `BASE_SEPOLIA_RPC_URL`
+- `BASE_SEPOLIA_DEPLOYER_PRIVATE_KEY`
+- `BASE_SEPOLIA_DEPLOYER_ADDRESS`
+- `BASE_SEPOLIA_REGISTRY_ADMIN`
+- `BASE_SEPOLIA_REGISTRY_ADMIN_PRIVATE_KEY`
+- `BASE_SEPOLIA_MOCK_POLICY_ADMIN`
+- `BASE_SEPOLIA_OWNER_PRIVATE_KEY`
+- `BASE_SEPOLIA_OWNER_ADDRESS`
+- `BASE_SEPOLIA_SUCCESSOR_A_PRIVATE_KEY`
+- `BASE_SEPOLIA_SUCCESSOR_A_ADDRESS`
+- `BASE_SEPOLIA_SUCCESSOR_B_PRIVATE_KEY`
+- `BASE_SEPOLIA_SUCCESSOR_B_ADDRESS`
+- `BASESCAN_API_KEY` (optional, but required for automated source verification)
+
+Configure these environment variables with small raw-unit staging values:
+
+- `BASE_SEPOLIA_MOCK_INITIAL_RAW_AMOUNT`
+- `BASE_SEPOLIA_SMOKE_RAW_AMOUNT`
+- `BASE_SEPOLIA_FORK_RAW_AMOUNT` (at least `10001` raw units)
+
+Use new disposable staging wallets only. The deployer, Registry admin, owner, and both Successors
+need a small Base Sepolia ETH balance because each submits at least one transaction. The workflow
+validates chain ID `84532`, derives every signing address from its protected key, checks that the
+owner and Successors are distinct, and refuses to broadcast when validation fails.
+
+Deployment evidence is uploaded as a GitHub Actions artifact. It is not committed automatically.
+After review, copy the artifact's `deployments/base-sepolia.json` into `main` in a separate commit.
+
+After the live multi-wallet smoke flow, the workflow runs the complete lifecycle against a fork of
+the deployed Base Sepolia contracts. The fork advances through the unchanged 90-day inactivity
+period and 30-day Protection Window without broadcasting those time-dependent test actions.
+
 ## Required configuration
 
 Set these values in a local, untracked environment or a protected CI environment. Never commit

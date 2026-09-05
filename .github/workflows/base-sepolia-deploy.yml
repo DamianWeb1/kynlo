@@ -1,0 +1,342 @@
+name: Kynlo Base Sepolia Staging
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: Type DEPLOY_BASE_SEPOLIA to authorize the staging broadcast
+        required: true
+        type: string
+
+permissions:
+  actions: read
+  contents: read
+
+concurrency:
+  group: kynlo-base-sepolia-deployment
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy and smoke test
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: base-sepolia
+    env:
+      FOUNDRY_PROFILE: default
+
+    steps:
+      - name: Validate explicit authorization
+        env:
+          CONFIRMATION: ${{ inputs.confirmation }}
+        run: test "$CONFIRMATION" = "DEPLOY_BASE_SEPOLIA"
+
+      - name: Check out exact main commit
+        uses: actions/checkout@v6
+        with:
+          ref: main
+          persist-credentials: false
+
+      - name: Resolve source commit
+        run: echo "KYNLO_SOURCE_COMMIT=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+
+      - name: Require a successful contract security gate for this commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          conclusion=$(gh api \
+            "/repos/$GITHUB_REPOSITORY/actions/workflows/contracts-ci.yml/runs?head_sha=$KYNLO_SOURCE_COMMIT&status=completed&per_page=10" \
+            --jq '.workflow_runs[0].conclusion // "missing"')
+          test "$conclusion" = "success"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install Solidity dependencies
+        run: |
+          npm ci
+          mkdir -p contracts/lib
+          cp -R node_modules/@openzeppelin/contracts contracts/lib/openzeppelin-contracts
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: stable
+
+      - name: Verify source and production constants
+        working-directory: contracts
+        run: |
+          forge fmt --check
+          forge clean
+          forge build
+          forge test -vvv
+          rg 'MIN_INACTIVITY_PERIOD = 90 days' src/KynloVault.sol
+          rg 'MIN_PROTECTION_WINDOW = 30 days' src/KynloVault.sol
+
+      - name: Validate Base Sepolia configuration and signers
+        shell: bash
+        env:
+          BASE_SEPOLIA_RPC_URL: ${{ secrets.BASE_SEPOLIA_RPC_URL }}
+          BASE_SEPOLIA_DEPLOYER_PRIVATE_KEY: ${{ secrets.BASE_SEPOLIA_DEPLOYER_PRIVATE_KEY }}
+          BASE_SEPOLIA_DEPLOYER_ADDRESS: ${{ secrets.BASE_SEPOLIA_DEPLOYER_ADDRESS }}
+          BASE_SEPOLIA_REGISTRY_ADMIN: ${{ secrets.BASE_SEPOLIA_REGISTRY_ADMIN }}
+          BASE_SEPOLIA_REGISTRY_ADMIN_PRIVATE_KEY: ${{ secrets.BASE_SEPOLIA_REGISTRY_ADMIN_PRIVATE_KEY }}
+          BASE_SEPOLIA_MOCK_POLICY_ADMIN: ${{ secrets.BASE_SEPOLIA_MOCK_POLICY_ADMIN }}
+          BASE_SEPOLIA_MOCK_INITIAL_HOLDER: ${{ secrets.BASE_SEPOLIA_OWNER_ADDRESS }}
+          BASE_SEPOLIA_MOCK_INITIAL_RAW_AMOUNT: ${{ vars.BASE_SEPOLIA_MOCK_INITIAL_RAW_AMOUNT }}
+          BASE_SEPOLIA_SMOKE_RAW_AMOUNT: ${{ vars.BASE_SEPOLIA_SMOKE_RAW_AMOUNT }}
+          BASE_SEPOLIA_FORK_RAW_AMOUNT: ${{ vars.BASE_SEPOLIA_FORK_RAW_AMOUNT }}
+          BASE_SEPOLIA_OWNER_PRIVATE_KEY: ${{ secrets.BASE_SEPOLIA_OWNER_PRIVATE_KEY }}
+          BASE_SEPOLIA_OWNER_ADDRESS: ${{ secrets.BASE_SEPOLIA_OWNER_ADDRESS }}
+          BASE_SEPOLIA_SUCCESSOR_A_PRIVATE_KEY: ${{ secrets.BASE_SEPOLIA_SUCCESSOR_A_PRIVATE_KEY }}
+          BASE_SEPOLIA_SUCCESSOR_A_ADDRESS: ${{ secrets.BASE_SEPOLIA_SUCCESSOR_A_ADDRESS }}
+          BASE_SEPOLIA_SUCCESSOR_B_PRIVATE_KEY: ${{ secrets.BASE_SEPOLIA_SUCCESSOR_B_PRIVATE_KEY }}
+          BASE_SEPOLIA_SUCCESSOR_B_ADDRESS: ${{ secrets.BASE_SEPOLIA_SUCCESSOR_B_ADDRESS }}
+        run: |
+          set -euo pipefail
+          required=(
+            BASE_SEPOLIA_RPC_URL
+            BASE_SEPOLIA_DEPLOYER_PRIVATE_KEY
+            BASE_SEPOLIA_DEPLOYER_ADDRESS
+            BASE_SEPOLIA_REGISTRY_ADMIN
+            BASE_SEPOLIA_REGISTRY_ADMIN_PRIVATE_KEY
+            BASE_SEPOLIA_MOCK_POLICY_ADMIN
+            BASE_SEPOLIA_MOCK_INITIAL_HOLDER
+            BASE_SEPOLIA_MOCK_INITIAL_RAW_AMOUNT
+            BASE_SEPOLIA_SMOKE_RAW_AMOUNT
+            BASE_SEPOLIA_FORK_RAW_AMOUNT
+            BASE_SEPOLIA_OWNER_PRIVATE_KEY
+            BASE_SEPOLIA_OWNER_ADDRESS
+            BASE_SEPOLIA_SUCCESSOR_A_PRIVATE_KEY
+            BASE_SEPOLIA_SUCCESSOR_A_ADDRESS
+            BASE_SEPOLIA_SUCCESSOR_B_PRIVATE_KEY
+            BASE_SEPOLIA_SUCCESSOR_B_ADDRESS
+          )
+          for name in "${required[@]}"; do
+            if [[ -z "${!name:-}" ]]; then
+              echo "Missing required protected setting: $name" >&2
+              exit 1
+            fi
+          done
+
+          chain_id=$(cast chain-id --rpc-url "$BASE_SEPOLIA_RPC_URL")
+          test "$chain_id" = "84532"
+
+          validate_signer() {
+            local key="$1"
+            local expected="${2,,}"
+            local actual
+            actual=$(cast wallet address --private-key "$key")
+            test "${actual,,}" = "$expected"
+          }
+          validate_signer "$BASE_SEPOLIA_DEPLOYER_PRIVATE_KEY" "$BASE_SEPOLIA_DEPLOYER_ADDRESS"
+          validate_signer "$BASE_SEPOLIA_REGISTRY_ADMIN_PRIVATE_KEY" "$BASE_SEPOLIA_REGISTRY_ADMIN"
+          validate_signer "$BASE_SEPOLIA_OWNER_PRIVATE_KEY" "$BASE_SEPOLIA_OWNER_ADDRESS"
+          validate_signer "$BASE_SEPOLIA_SUCCESSOR_A_PRIVATE_KEY" "$BASE_SEPOLIA_SUCCESSOR_A_ADDRESS"
+          validate_signer "$BASE_SEPOLIA_SUCCESSOR_B_PRIVATE_KEY" "$BASE_SEPOLIA_SUCCESSOR_B_ADDRESS"
+
+          test "${BASE_SEPOLIA_OWNER_ADDRESS,,}" != "${BASE_SEPOLIA_SUCCESSOR_A_ADDRESS,,}"
+          test "${BASE_SEPOLIA_OWNER_ADDRESS,,}" != "${BASE_SEPOLIA_SUCCESSOR_B_ADDRESS,,}"
+          test "${BASE_SEPOLIA_SUCCESSOR_A_ADDRESS,,}" != "${BASE_SEPOLIA_SUCCESSOR_B_ADDRESS,,}"
+
+          for address in \
+            "$BASE_SEPOLIA_DEPLOYER_ADDRESS" \
+            "$BASE_SEPOLIA_REGISTRY_ADMIN" \
+            "$BASE_SEPOLIA_OWNER_ADDRESS" \
+            "$BASE_SEPOLIA_SUCCESSOR_A_ADDRESS" \
+            "$BASE_SEPOLIA_SUCCESSOR_B_ADDRESS"; do
+            test "$(cast balance "$address" --rpc-url "$BASE_SEPOLIA_RPC_URL")" != "0"
+          done
+
+          python - <<'PY'
+          import os
+
+          initial = int(os.environ["BASE_SEPOLIA_MOCK_INITIAL_RAW_AMOUNT"])
+          smoke = int(os.environ["BASE_SEPOLIA_SMOKE_RAW_AMOUNT"])
+          fork = int(os.environ["BASE_SEPOLIA_FORK_RAW_AMOUNT"])
+          if fork < 10_001 or initial < smoke + fork + 202:
+              raise SystemExit("Mock supply is too small for the live and fork smoke flows")
+          PY
+
+      - name: Deploy production-compatible Registry and Vault
+        working-directory: contracts
+        env:
+          BASE_SEPOLIA_RPC_URL: ${{ secrets.BASE_SEPOLIA_RPC_URL }}
+          BASE_SEPOLIA_DEPLOYER_PRIVATE_KEY: ${{ secrets.BASE_SEPOLIA_DEPLOYER_PRIVATE_KEY }}
+          BASE_SEPOLIA_DEPLOYER_ADDRESS: ${{ secrets.BASE_SEPOLIA_DEPLOYER_ADDRESS }}
+          BASE_SEPOLIA_REGISTRY_ADMIN: ${{ secrets.BASE_SEPOLIA_REGISTRY_ADMIN }}
+        run: |
+          forge script script/DeployBaseSepolia.s.sol:DeployBaseSepolia \
+            --rpc-url "$BASE_SEPOLIA_RPC_URL" \
+            --broadcast \
+            --slow
+
+      - name: Resolve production deployment addresses
+        shell: bash
+        run: |
+          run_file=contracts/broadcast/DeployBaseSepolia.s.sol/84532/run-latest.json
+          registry=$(jq -r '.transactions[] | select(.contractName == "KynloAssetRegistry") | .contractAddress' "$run_file")
+          vault=$(jq -r '.transactions[] | select(.contractName == "KynloVault") | .contractAddress' "$run_file")
+          test -n "$registry" && test "$registry" != "null"
+          test -n "$vault" && test "$vault" != "null"
+          echo "BASE_SEPOLIA_REGISTRY_ADDRESS=$registry" >> "$GITHUB_ENV"
+          echo "BASE_SEPOLIA_VAULT_ADDRESS=$vault" >> "$GITHUB_ENV"
+
+      - name: Deploy explicitly labelled MOCK-B20 asset
+        working-directory: contracts
+        env:
+          BASE_SEPOLIA_RPC_URL: ${{ secrets.BASE_SEPOLIA_RPC_URL }}
+          BASE_SEPOLIA_DEPLOYER_PRIVATE_KEY: ${{ secrets.BASE_SEPOLIA_DEPLOYER_PRIVATE_KEY }}
+          BASE_SEPOLIA_DEPLOYER_ADDRESS: ${{ secrets.BASE_SEPOLIA_DEPLOYER_ADDRESS }}
+          BASE_SEPOLIA_MOCK_POLICY_ADMIN: ${{ secrets.BASE_SEPOLIA_MOCK_POLICY_ADMIN }}
+          BASE_SEPOLIA_MOCK_INITIAL_HOLDER: ${{ secrets.BASE_SEPOLIA_OWNER_ADDRESS }}
+          BASE_SEPOLIA_MOCK_INITIAL_RAW_AMOUNT: ${{ vars.BASE_SEPOLIA_MOCK_INITIAL_RAW_AMOUNT }}
+        run: |
+          forge script script/DeployMockB20Asset.s.sol:DeployMockB20Asset \
+            --rpc-url "$BASE_SEPOLIA_RPC_URL" \
+            --broadcast \
+            --slow
+
+      - name: Resolve mock asset address
+        shell: bash
+        run: |
+          run_file=contracts/broadcast/DeployMockB20Asset.s.sol/84532/run-latest.json
+          asset=$(jq -r '.transactions[] | select(.contractName == "MockB20PolicyAsset") | .contractAddress' "$run_file")
+          test -n "$asset" && test "$asset" != "null"
+          echo "BASE_SEPOLIA_MOCK_ASSET_ADDRESS=$asset" >> "$GITHUB_ENV"
+
+      - name: Admit MOCK-B20 for new deposits
+        working-directory: contracts
+        env:
+          BASE_SEPOLIA_RPC_URL: ${{ secrets.BASE_SEPOLIA_RPC_URL }}
+          BASE_SEPOLIA_REGISTRY_ADMIN: ${{ secrets.BASE_SEPOLIA_REGISTRY_ADMIN }}
+          BASE_SEPOLIA_REGISTRY_ADMIN_PRIVATE_KEY: ${{ secrets.BASE_SEPOLIA_REGISTRY_ADMIN_PRIVATE_KEY }}
+        run: |
+          forge script script/ConfigureBaseSepoliaRegistry.s.sol:ConfigureBaseSepoliaRegistry \
+            --rpc-url "$BASE_SEPOLIA_RPC_URL" \
+            --broadcast \
+            --slow
+
+      - name: Run live multi-wallet smoke flow
+        working-directory: contracts
+        env:
+          BASE_SEPOLIA_RPC_URL: ${{ secrets.BASE_SEPOLIA_RPC_URL }}
+          BASE_SEPOLIA_SMOKE_RAW_AMOUNT: ${{ vars.BASE_SEPOLIA_SMOKE_RAW_AMOUNT }}
+          BASE_SEPOLIA_OWNER_PRIVATE_KEY: ${{ secrets.BASE_SEPOLIA_OWNER_PRIVATE_KEY }}
+          BASE_SEPOLIA_OWNER_ADDRESS: ${{ secrets.BASE_SEPOLIA_OWNER_ADDRESS }}
+          BASE_SEPOLIA_SUCCESSOR_A_PRIVATE_KEY: ${{ secrets.BASE_SEPOLIA_SUCCESSOR_A_PRIVATE_KEY }}
+          BASE_SEPOLIA_SUCCESSOR_A_ADDRESS: ${{ secrets.BASE_SEPOLIA_SUCCESSOR_A_ADDRESS }}
+          BASE_SEPOLIA_SUCCESSOR_B_PRIVATE_KEY: ${{ secrets.BASE_SEPOLIA_SUCCESSOR_B_PRIVATE_KEY }}
+          BASE_SEPOLIA_SUCCESSOR_B_ADDRESS: ${{ secrets.BASE_SEPOLIA_SUCCESSOR_B_ADDRESS }}
+        run: |
+          forge script script/SmokeBaseSepolia.s.sol:SmokeBaseSepolia \
+            --rpc-url "$BASE_SEPOLIA_RPC_URL" \
+            --broadcast \
+            --slow
+
+      - name: Run complete production-timing lifecycle on a Sepolia fork
+        working-directory: contracts
+        env:
+          BASE_SEPOLIA_RPC_URL: ${{ secrets.BASE_SEPOLIA_RPC_URL }}
+          BASE_SEPOLIA_REGISTRY_ADMIN: ${{ secrets.BASE_SEPOLIA_REGISTRY_ADMIN }}
+          BASE_SEPOLIA_MOCK_POLICY_ADMIN: ${{ secrets.BASE_SEPOLIA_MOCK_POLICY_ADMIN }}
+          BASE_SEPOLIA_OWNER_ADDRESS: ${{ secrets.BASE_SEPOLIA_OWNER_ADDRESS }}
+          BASE_SEPOLIA_SUCCESSOR_A_ADDRESS: ${{ secrets.BASE_SEPOLIA_SUCCESSOR_A_ADDRESS }}
+          BASE_SEPOLIA_SUCCESSOR_B_ADDRESS: ${{ secrets.BASE_SEPOLIA_SUCCESSOR_B_ADDRESS }}
+          BASE_SEPOLIA_FORK_RAW_AMOUNT: ${{ vars.BASE_SEPOLIA_FORK_RAW_AMOUNT }}
+        run: |
+          forge script script/ForkLifecycleBaseSepolia.s.sol:ForkLifecycleBaseSepolia \
+            --rpc-url "$BASE_SEPOLIA_RPC_URL" \
+            -vvv
+
+      - name: Attempt source verification
+        id: verify
+        working-directory: contracts
+        shell: bash
+        env:
+          BASE_SEPOLIA_REGISTRY_ADMIN: ${{ secrets.BASE_SEPOLIA_REGISTRY_ADMIN }}
+          BASE_SEPOLIA_MOCK_POLICY_ADMIN: ${{ secrets.BASE_SEPOLIA_MOCK_POLICY_ADMIN }}
+          BASE_SEPOLIA_MOCK_INITIAL_HOLDER: ${{ secrets.BASE_SEPOLIA_OWNER_ADDRESS }}
+          BASE_SEPOLIA_MOCK_INITIAL_RAW_AMOUNT: ${{ vars.BASE_SEPOLIA_MOCK_INITIAL_RAW_AMOUNT }}
+          BASESCAN_API_KEY: ${{ secrets.BASESCAN_API_KEY }}
+        run: |
+          set +e
+          if [[ -z "$BASESCAN_API_KEY" ]]; then
+            echo "verified=false" >> "$GITHUB_OUTPUT"
+            echo "BASESCAN_API_KEY is absent, so source verification was not attempted."
+            exit 0
+          fi
+
+          registry_args=$(cast abi-encode 'constructor(address)' "$BASE_SEPOLIA_REGISTRY_ADMIN")
+          vault_args=$(cast abi-encode 'constructor(address)' "$BASE_SEPOLIA_REGISTRY_ADDRESS")
+          mock_args=$(cast abi-encode 'constructor(address,address,uint256)' \
+            "$BASE_SEPOLIA_MOCK_POLICY_ADMIN" \
+            "$BASE_SEPOLIA_MOCK_INITIAL_HOLDER" \
+            "$BASE_SEPOLIA_MOCK_INITIAL_RAW_AMOUNT")
+
+          forge verify-contract "$BASE_SEPOLIA_REGISTRY_ADDRESS" src/KynloAssetRegistry.sol:KynloAssetRegistry \
+            --chain 84532 --watch --constructor-args "$registry_args" \
+            --etherscan-api-key "$BASESCAN_API_KEY"
+          registry_status=$?
+          forge verify-contract "$BASE_SEPOLIA_VAULT_ADDRESS" src/KynloVault.sol:KynloVault \
+            --chain 84532 --watch --constructor-args "$vault_args" \
+            --etherscan-api-key "$BASESCAN_API_KEY"
+          vault_status=$?
+          forge verify-contract "$BASE_SEPOLIA_MOCK_ASSET_ADDRESS" staging/MockB20PolicyAsset.sol:MockB20PolicyAsset \
+            --chain 84532 --watch --constructor-args "$mock_args" \
+            --etherscan-api-key "$BASESCAN_API_KEY"
+          mock_status=$?
+
+          if (( registry_status == 0 && vault_status == 0 && mock_status == 0 )); then
+            echo "verified=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "verified=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Record deployment
+        env:
+          BASE_SEPOLIA_DEPLOYER_ADDRESS: ${{ secrets.BASE_SEPOLIA_DEPLOYER_ADDRESS }}
+          BASE_SEPOLIA_REGISTRY_ADMIN: ${{ secrets.BASE_SEPOLIA_REGISTRY_ADMIN }}
+        run: |
+          node scripts/record-base-sepolia-deployment.mjs \
+            --production-run contracts/broadcast/DeployBaseSepolia.s.sol/84532/run-latest.json \
+            --mock-run contracts/broadcast/DeployMockB20Asset.s.sol/84532/run-latest.json \
+            --source-commit "$KYNLO_SOURCE_COMMIT" \
+            --deployer "$BASE_SEPOLIA_DEPLOYER_ADDRESS" \
+            --registry-admin "$BASE_SEPOLIA_REGISTRY_ADMIN" \
+            --source-verified "${{ steps.verify.outputs.verified }}"
+
+      - name: Upload deployment evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: kynlo-base-sepolia-deployment-${{ github.run_id }}
+          path: |
+            deployments/base-sepolia.json
+            contracts/broadcast/DeployBaseSepolia.s.sol/84532/run-latest.json
+            contracts/broadcast/DeployMockB20Asset.s.sol/84532/run-latest.json
+            contracts/broadcast/ConfigureBaseSepoliaRegistry.s.sol/84532/run-latest.json
+            contracts/broadcast/SmokeBaseSepolia.s.sol/84532/run-latest.json
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Print deployment summary
+        run: |
+          summary=$(cat <<EOF
+          KYNLO BASE SEPOLIA DEPLOYMENT
+
+          Source commit: $KYNLO_SOURCE_COMMIT
+          Chain ID: 84532
+          Registry: $BASE_SEPOLIA_REGISTRY_ADDRESS
+          Vault: $BASE_SEPOLIA_VAULT_ADDRESS
+          Asset: $BASE_SEPOLIA_MOCK_ASSET_ADDRESS (MOCK-B20, not an official Coinbase asset)
+          Source verified: ${{ steps.verify.outputs.verified }}
+          Live smoke flow: PASS
+          Fork lifecycle: PASS (production 90-day + 30-day timing)
+          EOF
+          )
+          echo "$summary"
+          echo "$summary" >> "$GITHUB_STEP_SUMMARY"

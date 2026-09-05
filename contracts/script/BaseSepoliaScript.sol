@@ -5,8 +5,12 @@ interface VmScript {
     function addr(uint256 privateKey) external returns (address);
     function envAddress(string calldata name) external returns (address);
     function envUint(string calldata name) external returns (uint256);
+    function prank(address account) external;
+    function startPrank(address account) external;
+    function stopPrank() external;
     function startBroadcast(uint256 privateKey) external;
     function stopBroadcast() external;
+    function warp(uint256 timestamp) external;
 }
 
 abstract contract BaseSepoliaScript {
