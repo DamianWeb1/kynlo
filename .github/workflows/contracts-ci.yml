@@ -1,0 +1,245 @@
+name: Kynlo Contract Security
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: contracts-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  contracts:
+    name: Contract verification
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+
+    env:
+      FOUNDRY_PROFILE: default
+      FOUNDRY_FUZZ_RUNS: "1000"
+      FOUNDRY_INVARIANT_RUNS: "256"
+      FOUNDRY_INVARIANT_DEPTH: "64"
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install Solidity dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1.6.0
+        with:
+          version: stable
+          cache: true
+
+      - name: Verify Foundry tools
+        id: foundry
+        run: |
+          set -euo pipefail
+          forge --version
+          cast --version
+          anvil --version
+          echo "version=$(forge --version | head -n 1)" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Install Slither
+        id: slither_version
+        run: |
+          set -euo pipefail
+          python -m venv "$RUNNER_TEMP/slither-venv"
+          "$RUNNER_TEMP/slither-venv/bin/python" -m pip install --upgrade pip
+          "$RUNNER_TEMP/slither-venv/bin/python" -m pip install "slither-analyzer==0.11.5"
+          echo "$RUNNER_TEMP/slither-venv/bin" >> "$GITHUB_PATH"
+          "$RUNNER_TEMP/slither-venv/bin/slither" --version
+          echo "version=$("$RUNNER_TEMP/slither-venv/bin/slither" --version | head -n 1)" >> "$GITHUB_OUTPUT"
+
+      - name: Check contract formatting
+        id: forge_fmt
+        working-directory: contracts
+        run: forge fmt --check
+
+      - name: Clean contract artifacts
+        working-directory: contracts
+        run: forge clean
+
+      - name: Build contracts
+        id: forge_build
+        working-directory: contracts
+        run: forge build --sizes
+
+      - name: Run full contract suite
+        id: unit_tests
+        working-directory: contracts
+        run: |
+          set -o pipefail
+          forge test -vvv | tee forge-test.log
+
+      - name: Run fuzz tests
+        id: fuzz_tests
+        working-directory: contracts
+        run: |
+          set -o pipefail
+          echo "Fuzz runs per property: $FOUNDRY_FUZZ_RUNS"
+          forge test \
+            --match-contract KynloVaultFuzzTest \
+            --fuzz-runs "$FOUNDRY_FUZZ_RUNS" \
+            -vvv | tee forge-fuzz.log
+
+      - name: Run stateful invariants
+        id: invariant_tests
+        working-directory: contracts
+        run: |
+          set -o pipefail
+          echo "Invariant runs: $FOUNDRY_INVARIANT_RUNS"
+          echo "Invariant depth: $FOUNDRY_INVARIANT_DEPTH"
+          forge test \
+            --match-contract KynloVaultInvariantTest \
+            -vvv | tee forge-invariants.log
+
+      - name: Run coverage
+        id: coverage
+        continue-on-error: true
+        working-directory: contracts
+        run: |
+          set -o pipefail
+          forge coverage --report summary --report lcov | tee forge-coverage.log
+
+      - name: Run Slither
+        id: slither
+        continue-on-error: true
+        working-directory: contracts
+        run: |
+          set -o pipefail
+          slither . \
+            --filter-paths "test|lib|../node_modules" \
+            --json slither-report.json \
+            2>&1 | tee slither-output.log
+
+      - name: Classify Slither findings
+        id: slither_gate
+        working-directory: contracts
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          from collections import Counter
+          from pathlib import Path
+
+          report_path = Path("slither-report.json")
+          if not report_path.exists():
+              raise SystemExit("Slither did not produce slither-report.json")
+
+          report = json.loads(report_path.read_text())
+          detectors = report.get("results", {}).get("detectors", [])
+          counts = Counter(item.get("impact", "Informational").upper() for item in detectors)
+          categories = ("CRITICAL", "HIGH", "MEDIUM", "LOW", "INFORMATIONAL")
+
+          for category in categories:
+              print(f"{category}: {counts[category]}")
+
+          output_path = os.environ["GITHUB_OUTPUT"]
+          with open(output_path, "a", encoding="utf-8") as output:
+              for category in categories:
+                  output.write(f"{category.lower()}={counts[category]}\n")
+
+          blocking = [
+              finding
+              for finding in detectors
+              if finding.get("impact", "").upper() in {"CRITICAL", "HIGH"}
+          ]
+          if blocking:
+              print("\nBlocking findings:")
+              for finding in blocking:
+                  print(
+                      f"- {finding.get('impact')} / {finding.get('confidence')}: "
+                      f"{finding.get('check')}"
+                  )
+              raise SystemExit("Unresolved critical or high Slither findings")
+          PY
+
+      - name: Upload contract security reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: kynlo-contract-security-reports
+          path: |
+            contracts/forge-test.log
+            contracts/forge-fuzz.log
+            contracts/forge-invariants.log
+            contracts/forge-coverage.log
+            contracts/lcov.info
+            contracts/slither-output.log
+            contracts/slither-report.json
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Print security gate summary
+        if: always()
+        env:
+          FOUNDRY_VERSION: ${{ steps.foundry.outputs.version }}
+          SLITHER_VERSION: ${{ steps.slither_version.outputs.version }}
+          FORGE_FMT: ${{ steps.forge_fmt.outcome }}
+          FORGE_BUILD: ${{ steps.forge_build.outcome }}
+          UNIT_TESTS: ${{ steps.unit_tests.outcome }}
+          FUZZ_TESTS: ${{ steps.fuzz_tests.outcome }}
+          INVARIANT_TESTS: ${{ steps.invariant_tests.outcome }}
+          COVERAGE: ${{ steps.coverage.outcome }}
+          CRITICAL: ${{ steps.slither_gate.outputs.critical }}
+          HIGH: ${{ steps.slither_gate.outputs.high }}
+          MEDIUM: ${{ steps.slither_gate.outputs.medium }}
+          LOW: ${{ steps.slither_gate.outputs.low }}
+        run: |
+          ready="YES"
+          for result in "$FORGE_FMT" "$FORGE_BUILD" "$UNIT_TESTS" "$FUZZ_TESTS" "$INVARIANT_TESTS"; do
+            if [[ "$result" != "success" ]]; then
+              ready="NO"
+            fi
+          done
+          if [[ "${CRITICAL:-unknown}" != "0" || "${HIGH:-unknown}" != "0" ]]; then
+            ready="NO"
+          fi
+
+          summary=$(cat <<EOF
+          KYNLO CONTRACT SECURITY GATE
+
+          Foundry: ${FOUNDRY_VERSION:-unavailable}
+          Slither: ${SLITHER_VERSION:-unavailable}
+          Forge fmt: ${FORGE_FMT:-not-run}
+          Forge build: ${FORGE_BUILD:-not-run}
+          Unit tests: ${UNIT_TESTS:-not-run}
+          Fuzz tests: ${FUZZ_TESTS:-not-run}, 1000 runs per property
+          Invariant tests: ${INVARIANT_TESTS:-not-run}, 256 runs, depth 64
+          Coverage: ${COVERAGE:-not-run}
+          Critical findings: ${CRITICAL:-unavailable}
+          High findings: ${HIGH:-unavailable}
+          Medium findings: ${MEDIUM:-unavailable}
+          Low findings: ${LOW:-unavailable}
+
+          READY FOR BASE SEPOLIA:
+          $ready
+          EOF
+          )
+          echo "$summary"
+          echo "$summary" >> "$GITHUB_STEP_SUMMARY"
