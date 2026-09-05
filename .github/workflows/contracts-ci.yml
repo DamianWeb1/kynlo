@@ -136,6 +136,7 @@ jobs:
         run: |
           set -o pipefail
           slither . \
+            --exclude-dependencies \
             --filter-paths "test|lib|../node_modules" \
             --json slither-report.json \
             2>&1 | tee slither-output.log
