@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.28;
 
-import {KynloTestBase} from "./KynloTestBase.sol";
-import {KynloVault} from "../src/KynloVault.sol";
-import {KynloAssetRegistry} from "../src/KynloAssetRegistry.sol";
-import {MockPolicyToken} from "./mocks/MockPolicyToken.sol";
-import {MockFeeToken} from "./mocks/MockFeeToken.sol";
-import {MockReentrantToken} from "./mocks/MockReentrantToken.sol";
+import { KynloTestBase } from "./KynloTestBase.sol";
+import { KynloVault } from "../src/KynloVault.sol";
+import { KynloAssetRegistry } from "../src/KynloAssetRegistry.sol";
+import { MockPolicyToken } from "./mocks/MockPolicyToken.sol";
+import { MockFeeToken } from "./mocks/MockFeeToken.sol";
+import { MockReentrantToken } from "./mocks/MockReentrantToken.sol";
 
 contract KynloVaultCreationTest is KynloTestBase {
     function testCreatesValidPlanInDraft() public {
@@ -204,7 +204,7 @@ contract KynloVaultAcceptanceTest is KynloTestBase {
 
         assertFalse(vault.isFullyAccepted(planId));
         assertEq(uint256(vault.getEffectiveState(planId)), uint256(KynloVault.PlanState.DRAFT));
-        (, , uint64 lastCheckIn, , , uint32 version, bool armed, , ) = vault.legacyPlans(planId);
+        (,, uint64 lastCheckIn,,, uint32 version, bool armed,,) = vault.legacyPlans(planId);
         assertEq(version, 2);
         assertEq(lastCheckIn, 0);
         assertFalse(armed);
@@ -220,7 +220,7 @@ contract KynloVaultAcceptanceTest is KynloTestBase {
         vault.updateSuccessors(planId, next);
 
         assertFalse(vault.isFullyAccepted(planId));
-        (, , , , , uint32 version, , , ) = vault.legacyPlans(planId);
+        (,,,,, uint32 version,,,) = vault.legacyPlans(planId);
         assertEq(version, 2);
         assertTrue(vault.acceptedVersion(planId, SUCCESSOR_A) != version);
         assertTrue(vault.acceptedVersion(planId, SUCCESSOR_B) != version);
@@ -235,35 +235,28 @@ contract KynloVaultLifecycleTest is KynloTestBase {
 
     function testExactDeadlineStartsProtection() public {
         uint256 planId = _activePlan(100);
-        (, , uint64 lastCheckIn, uint64 inactivity, , , , , ) = vault.legacyPlans(planId);
+        (,, uint64 lastCheckIn, uint64 inactivity,,,,,) = vault.legacyPlans(planId);
         vm.warp(uint256(lastCheckIn) + inactivity - 1);
         assertEq(uint256(vault.getEffectiveState(planId)), uint256(KynloVault.PlanState.ACTIVE));
         vm.warp(uint256(lastCheckIn) + inactivity);
-        assertEq(
-            uint256(vault.getEffectiveState(planId)),
-            uint256(KynloVault.PlanState.PROTECTION)
-        );
+        assertEq(uint256(vault.getEffectiveState(planId)), uint256(KynloVault.PlanState.PROTECTION));
     }
 
     function testExactProtectionBoundaryStartsSuccessionReady() public {
         uint256 planId = _activePlan(100);
-        (, , uint64 lastCheckIn, uint64 inactivity, uint64 protection, , , , ) =
+        (,, uint64 lastCheckIn, uint64 inactivity, uint64 protection,,,,) =
             vault.legacyPlans(planId);
         vm.warp(uint256(lastCheckIn) + inactivity + protection - 1);
-        assertEq(
-            uint256(vault.getEffectiveState(planId)),
-            uint256(KynloVault.PlanState.PROTECTION)
-        );
+        assertEq(uint256(vault.getEffectiveState(planId)), uint256(KynloVault.PlanState.PROTECTION));
         vm.warp(uint256(lastCheckIn) + inactivity + protection);
         assertEq(
-            uint256(vault.getEffectiveState(planId)),
-            uint256(KynloVault.PlanState.SUCCESSION_READY)
+            uint256(vault.getEffectiveState(planId)), uint256(KynloVault.PlanState.SUCCESSION_READY)
         );
     }
 
     function testProofOfLifeRecoversDuringProtection() public {
         uint256 planId = _activePlan(100);
-        (, , uint64 lastCheckIn, uint64 inactivity, , , , , ) = vault.legacyPlans(planId);
+        (,, uint64 lastCheckIn, uint64 inactivity,,,,,) = vault.legacyPlans(planId);
         vm.warp(uint256(lastCheckIn) + inactivity);
         vm.prank(OWNER);
         vault.checkIn(planId);
@@ -272,7 +265,7 @@ contract KynloVaultLifecycleTest is KynloTestBase {
 
     function testProtectionFreezesSuccessorsAndTiming() public {
         uint256 planId = _activePlan(100);
-        (, , uint64 lastCheckIn, uint64 inactivity, , , , , ) = vault.legacyPlans(planId);
+        (,, uint64 lastCheckIn, uint64 inactivity,,,,,) = vault.legacyPlans(planId);
         vm.warp(uint256(lastCheckIn) + inactivity);
 
         vm.expectRevert(KynloVault.ProtectedMutation.selector);
@@ -296,7 +289,7 @@ contract KynloVaultLifecycleTest is KynloTestBase {
 
     function testProtectionRequiresRecoveryBeforeWithdrawal() public {
         uint256 planId = _activePlan(100);
-        (, , uint64 lastCheckIn, uint64 inactivity, , , , , ) = vault.legacyPlans(planId);
+        (,, uint64 lastCheckIn, uint64 inactivity,,,,,) = vault.legacyPlans(planId);
         vm.warp(uint256(lastCheckIn) + inactivity);
         vm.expectRevert(KynloVault.ProtectedMutation.selector);
         vm.prank(OWNER);
@@ -323,12 +316,11 @@ contract KynloVaultLifecycleTest is KynloTestBase {
 
     function testLifecycleIsDeterministicWhenTimeMovesBackward() public {
         uint256 planId = _activePlan(100);
-        (, , uint64 lastCheckIn, uint64 inactivity, uint64 protection, , , , ) =
+        (,, uint64 lastCheckIn, uint64 inactivity, uint64 protection,,,,) =
             vault.legacyPlans(planId);
         vm.warp(uint256(lastCheckIn) + inactivity + protection);
         assertEq(
-            uint256(vault.getEffectiveState(planId)),
-            uint256(KynloVault.PlanState.SUCCESSION_READY)
+            uint256(vault.getEffectiveState(planId)), uint256(KynloVault.PlanState.SUCCESSION_READY)
         );
         vm.warp(uint256(lastCheckIn) + 1);
         assertEq(uint256(vault.getEffectiveState(planId)), uint256(KynloVault.PlanState.ACTIVE));
@@ -408,7 +400,6 @@ contract KynloVaultAssetTest is KynloTestBase {
         vault.depositAsset(planId, address(stock), 1);
         vm.stopPrank();
     }
-
 }
 
 contract KynloVaultTokenFailureTest is KynloTestBase {
@@ -449,9 +440,8 @@ contract KynloVaultAuthorityTest is KynloTestBase {
         vault.withdrawAsset(planId, address(stock), 100);
         assertEq(stock.balanceOf(address(vault)), 100);
 
-        (bool success, ) = address(vault).call(
-            abi.encodeWithSignature("sweep(address)", address(stock))
-        );
+        (bool success,) =
+            address(vault).call(abi.encodeWithSignature("sweep(address)", address(stock)));
         assertFalse(success);
         assertEq(stock.balanceOf(address(vault)), 100);
     }
@@ -510,8 +500,7 @@ contract KynloVaultClaimsTest is KynloTestBase {
         vm.prank(SUCCESSOR_B);
         vault.claim(planId, address(stock));
         assertEq(
-            uint256(vault.getEffectiveState(planId)),
-            uint256(KynloVault.PlanState.SUCCESSION_READY)
+            uint256(vault.getEffectiveState(planId)), uint256(KynloVault.PlanState.SUCCESSION_READY)
         );
         vm.prank(SUCCESSOR_B);
         vault.claim(planId, address(secondStock));

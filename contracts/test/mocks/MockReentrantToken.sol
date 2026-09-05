@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.28;
 
-import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 interface IKynloVaultReentryTarget {
     function depositAsset(uint256 planId, address token, uint256 rawAmount) external;
@@ -12,7 +12,7 @@ contract MockReentrantToken is ERC20 {
     uint256 public targetPlanId;
     bool public attackEnabled;
 
-    constructor() ERC20("Reentrant Token", "REENTER") {}
+    constructor() ERC20("Reentrant Token", "REENTER") { }
 
     function mint(address to, uint256 amount) external {
         _mint(to, amount);

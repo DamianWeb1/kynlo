@@ -31,7 +31,11 @@ abstract contract TestBase {
         require(a == b, "assertEq address");
     }
 
-    function _bound(uint256 value, uint256 minimum, uint256 maximum) internal pure returns (uint256) {
+    function _bound(uint256 value, uint256 minimum, uint256 maximum)
+        internal
+        pure
+        returns (uint256)
+    {
         require(minimum <= maximum, "invalid bounds");
         if (value >= minimum && value <= maximum) return value;
         return minimum + (value % (maximum - minimum + 1));

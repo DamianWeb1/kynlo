@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.28;
 
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
-import {IKynloAssetRegistry} from "./interfaces/IKynloAssetRegistry.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import { ReentrancyGuard } from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
+import { IKynloAssetRegistry } from "./interfaces/IKynloAssetRegistry.sol";
 
 /// @notice A non-upgradeable asset vault for programmable succession.
 /// @dev The vault deliberately has no owner or privileged asset-moving function.
@@ -58,7 +58,8 @@ contract KynloVault is ReentrancyGuard {
     mapping(uint256 planId => AssetPosition[]) private _assets;
     mapping(uint256 planId => mapping(address token => uint256 indexPlusOne)) private _assetIndex;
     mapping(uint256 planId => mapping(address successor => uint32 version)) public acceptedVersion;
-    mapping(uint256 planId => mapping(address successor => mapping(address token => bool))) public claimed;
+    mapping(uint256 planId => mapping(address successor => mapping(address token => bool))) public
+        claimed;
     mapping(address token => uint256 rawAmount) public totalAttributed;
 
     error InvalidRegistry();
@@ -85,7 +86,9 @@ contract KynloVault is ReentrancyGuard {
     error NoClaimEntitlement();
 
     event LegacyPlanCreated(uint256 indexed planId, address indexed owner, uint32 successorVersion);
-    event SuccessorAccepted(uint256 indexed planId, address indexed successor, uint32 successorVersion);
+    event SuccessorAccepted(
+        uint256 indexed planId, address indexed successor, uint32 successorVersion
+    );
     event LegacyPlanArmed(uint256 indexed planId, uint64 lastCheckIn);
     event ProofOfLifeCheckedIn(uint256 indexed planId, uint64 lastCheckIn);
     event SuccessorsUpdated(uint256 indexed planId, uint32 successorVersion);
@@ -93,12 +96,11 @@ contract KynloVault is ReentrancyGuard {
     event AssetDeposited(uint256 indexed planId, address indexed token, uint256 rawAmount);
     event AssetWithdrawn(uint256 indexed planId, address indexed token, uint256 rawAmount);
     event LegacyPlanCancelled(uint256 indexed planId);
-    event DistributionBaseRecorded(uint256 indexed planId, address indexed token, uint256 rawAmount);
+    event DistributionBaseRecorded(
+        uint256 indexed planId, address indexed token, uint256 rawAmount
+    );
     event SuccessionClaimed(
-        uint256 indexed planId,
-        address indexed successor,
-        address indexed token,
-        uint256 rawAmount
+        uint256 indexed planId, address indexed successor, address indexed token, uint256 rawAmount
     );
     event LegacyPlanCompleted(uint256 indexed planId);
 
@@ -204,11 +206,9 @@ contract KynloVault is ReentrancyGuard {
         emit SuccessorsUpdated(planId, plan.successorVersion);
     }
 
-    function updateTiming(
-        uint256 planId,
-        uint64 inactivityPeriod,
-        uint64 protectionWindow
-    ) external {
+    function updateTiming(uint256 planId, uint64 inactivityPeriod, uint64 protectionWindow)
+        external
+    {
         LegacyPlan storage plan = _ownedPlan(planId);
         _requireEditable(planId);
         _validateTiming(inactivityPeriod, protectionWindow);
@@ -218,11 +218,7 @@ contract KynloVault is ReentrancyGuard {
         emit TimingUpdated(planId, inactivityPeriod, protectionWindow);
     }
 
-    function withdrawAsset(
-        uint256 planId,
-        address token,
-        uint256 rawAmount
-    ) external nonReentrant {
+    function withdrawAsset(uint256 planId, address token, uint256 rawAmount) external nonReentrant {
         LegacyPlan storage plan = _ownedPlan(planId);
         PlanState state = getEffectiveState(planId);
         if (state == PlanState.PROTECTION) revert ProtectedMutation();
@@ -242,9 +238,8 @@ contract KynloVault is ReentrancyGuard {
         LegacyPlan storage plan = _ownedPlan(planId);
         PlanState state = getEffectiveState(planId);
         if (
-            state == PlanState.SUCCESSION_READY ||
-            state == PlanState.COMPLETED ||
-            state == PlanState.CANCELLED
+            state == PlanState.SUCCESSION_READY || state == PlanState.COMPLETED
+                || state == PlanState.CANCELLED
         ) revert WrongState(state);
 
         plan.cancelled = true;
@@ -334,20 +329,20 @@ contract KynloVault is ReentrancyGuard {
         if (plan.owner != msg.sender) revert NotPlanOwner();
     }
 
-    function _position(
-        uint256 planId,
-        address token
-    ) internal view returns (AssetPosition storage position) {
+    function _position(uint256 planId, address token)
+        internal
+        view
+        returns (AssetPosition storage position)
+    {
         uint256 pointer = _assetIndex[planId][token];
         if (pointer == 0) revert AssetNotFound();
         position = _assets[planId][pointer - 1];
     }
 
     function _validateTiming(uint64 inactivityPeriod, uint64 protectionWindow) internal pure {
-        if (
-            inactivityPeriod < MIN_INACTIVITY_PERIOD ||
-            protectionWindow < MIN_PROTECTION_WINDOW
-        ) revert UnsafeTiming();
+        if (inactivityPeriod < MIN_INACTIVITY_PERIOD || protectionWindow < MIN_PROTECTION_WINDOW) {
+            revert UnsafeTiming();
+        }
     }
 
     function _validateSuccessors(address planOwner, Successor[] calldata list) internal pure {
@@ -357,9 +352,8 @@ contract KynloVault is ReentrancyGuard {
         for (uint256 i; i < list.length; ++i) {
             Successor calldata successor = list[i];
             if (
-                successor.account == address(0) ||
-                successor.account == planOwner ||
-                successor.shareBps == 0
+                successor.account == address(0) || successor.account == planOwner
+                    || successor.shareBps == 0
             ) revert InvalidSuccessor();
             for (uint256 j; j < i; ++j) {
                 if (list[j].account == successor.account) revert DuplicateSuccessor();
@@ -370,7 +364,9 @@ contract KynloVault is ReentrancyGuard {
     }
 
     function _storeSuccessors(uint256 planId, Successor[] calldata list) internal {
-        for (uint256 i; i < list.length; ++i) _successors[planId].push(list[i]);
+        for (uint256 i; i < list.length; ++i) {
+            _successors[planId].push(list[i]);
+        }
     }
 
     function _isListed(uint256 planId, address account) internal view returns (bool) {
@@ -378,10 +374,11 @@ contract KynloVault is ReentrancyGuard {
         return listed;
     }
 
-    function _successorIndex(
-        uint256 planId,
-        address account
-    ) internal view returns (uint256, bool) {
+    function _successorIndex(uint256 planId, address account)
+        internal
+        view
+        returns (uint256, bool)
+    {
         Successor[] storage list = _successors[planId];
         for (uint256 i; i < list.length; ++i) {
             if (list[i].account == account) return (i, true);
@@ -394,11 +391,11 @@ contract KynloVault is ReentrancyGuard {
         if (state != PlanState.DRAFT && state != PlanState.ACTIVE) revert ProtectedMutation();
     }
 
-    function _entitlement(
-        uint256 planId,
-        uint256 index,
-        uint256 distributionBase
-    ) internal view returns (uint256) {
+    function _entitlement(uint256 planId, uint256 index, uint256 distributionBase)
+        internal
+        view
+        returns (uint256)
+    {
         Successor[] storage list = _successors[planId];
         if (index + 1 < list.length) {
             return Math.mulDiv(distributionBase, list[index].shareBps, TOTAL_BPS);

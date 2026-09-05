@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.28;
 
-import {KynloTestBase} from "./KynloTestBase.sol";
-import {KynloVault} from "../src/KynloVault.sol";
+import { KynloTestBase } from "./KynloTestBase.sol";
+import { KynloVault } from "../src/KynloVault.sol";
 
 contract KynloVaultFuzzTest is KynloTestBase {
     function testFuzzTwoSuccessorClaimsConserveRawUnits(
@@ -58,19 +58,15 @@ contract KynloVaultFuzzTest is KynloTestBase {
         _acceptAll(planId);
         vm.prank(OWNER);
         vault.armLegacyPlan(planId);
-        (, , uint64 checkedInAt, , , , , , ) = vault.legacyPlans(planId);
+        (,, uint64 checkedInAt,,,,,,) = vault.legacyPlans(planId);
 
         vm.warp(uint256(checkedInAt) + inactivity - 1);
         assertEq(uint256(vault.getEffectiveState(planId)), uint256(KynloVault.PlanState.ACTIVE));
         vm.warp(uint256(checkedInAt) + inactivity);
-        assertEq(
-            uint256(vault.getEffectiveState(planId)),
-            uint256(KynloVault.PlanState.PROTECTION)
-        );
+        assertEq(uint256(vault.getEffectiveState(planId)), uint256(KynloVault.PlanState.PROTECTION));
         vm.warp(uint256(checkedInAt) + inactivity + protection);
         assertEq(
-            uint256(vault.getEffectiveState(planId)),
-            uint256(KynloVault.PlanState.SUCCESSION_READY)
+            uint256(vault.getEffectiveState(planId)), uint256(KynloVault.PlanState.SUCCESSION_READY)
         );
     }
 
