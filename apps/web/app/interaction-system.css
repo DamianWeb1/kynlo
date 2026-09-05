@@ -1,0 +1,12 @@
+.kynlo-spatial-frame{position:relative}
+.hero-spatial-axis{position:absolute;right:var(--kynlo-gutter);bottom:48%;z-index:2;display:flex;flex-direction:column;gap:var(--kynlo-space-3);color:var(--kynlo-light-36);font-size:.62rem;letter-spacing:.18em;text-align:right}
+.spatial-axes{position:absolute;inset:var(--kynlo-space-6) var(--kynlo-space-7) auto;z-index:4;display:flex;justify-content:space-between;pointer-events:none;color:var(--kynlo-axis);font-size:.62rem;letter-spacing:.16em}.spatial-axes b{color:var(--kynlo-signal);font-weight:400;margin-left:var(--kynlo-space-2)}.time-axis{writing-mode:vertical-rl}
+.kynlo-time-rail span{display:grid;grid-template-columns:var(--kynlo-space-6) 1fr;align-items:center}.kynlo-time-rail i{font-style:normal;font-size:.54rem;color:var(--kynlo-meta-faint)}.kynlo-time-rail .current i{color:var(--kynlo-signal)}
+.kynlo-ownership-path .allocation-60{stroke-width:var(--kynlo-path-60)}.kynlo-ownership-path .allocation-40{stroke-width:var(--kynlo-path-40)}.transfer-marker{fill:var(--kynlo-signal);opacity:var(--graph-reveal)}
+.kynlo-ownership-path .transfer-marker{transform-origin:center;transition:opacity var(--kynlo-motion-path) var(--kynlo-ease-state)}
+.kynlo-signal{position:relative;width:18px;height:8px;display:inline-flex;align-items:center;justify-content:center;margin-top:var(--kynlo-space-3)}.kynlo-signal i{position:absolute;width:6px;height:6px;border-radius:var(--kynlo-radius-round);background:var(--kynlo-signal)}.kynlo-signal i:last-child{animation:proof-pulse var(--kynlo-motion-pulse) var(--kynlo-ease-pulse) infinite}.signal-missed i,.signal-nothing i{background:var(--kynlo-alert)}.signal-missed i:last-child,.signal-nothing i:last-child,.signal-protection i:last-child{animation:none}.signal-protection:after{content:"";position:absolute;width:18px;height:var(--kynlo-line-thin);background:var(--kynlo-ink)}
+.kynlo-calm-surface[data-calm=true] *{animation-play-state:paused!important;transition-duration:0s!important}
+.vault-preview .certificate-stack{z-index:1}.vault-preview{position:relative}
+@keyframes proof-pulse{0%{opacity:.8;transform:scale(1)}70%,100%{opacity:0;transform:scale(3.2)}}
+@media(max-width:900px){.spatial-axes{display:none}.kynlo-time-rail span{display:none}}
+@media(prefers-reduced-motion:reduce){.kynlo-signal i:last-child,.transfer-marker{animation:none!important}.kynlo-ownership-path .graph-lines path{transition:none}.kynlo-calm-surface *{transition:none!important}}

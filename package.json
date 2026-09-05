@@ -1,0 +1,22 @@
+{
+  "name": "kynlo",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "apps/web"
+  ],
+  "scripts": {
+    "dev": "bash scripts/dev-preview.sh",
+    "build": "npm --prefix apps/web run build && node scripts/sync-site-output.mjs",
+    "lint": "npm --prefix apps/web run lint",
+    "test:web": "npm --prefix apps/web run test",
+    "compile:contracts": "solcjs --optimize --optimize-runs 200 --base-path contracts --include-path node_modules --bin --output-dir contracts/out-solc contracts/src/KynloAssetRegistry.sol contracts/src/KynloVault.sol contracts/test/KynloVault.t.sol contracts/test/KynloFuzz.t.sol contracts/test/KynloInvariants.t.sol"
+  },
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "devDependencies": {
+    "@openzeppelin/contracts": "^5.4.0",
+    "solc": "^0.8.28"
+  }
+}

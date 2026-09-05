@@ -1,0 +1,98 @@
+:root {
+  /* Frozen Kynlo visual system, version 1.0.0. */
+  --kynlo-system-version: "1.0.0";
+
+  /* Color */
+  --kynlo-ink: #11120f;
+  --kynlo-bone: #f1eee5;
+  --kynlo-paper: #faf8f1;
+  --kynlo-vault: #dad5c8;
+  --kynlo-signal: #b8ff36;
+  --kynlo-alert: #a7623d;
+  --kynlo-protected: #64665e;
+  --kynlo-copy: #4e4f48;
+  --kynlo-copy-soft: #55554e;
+  --kynlo-meta: #77766e;
+  --kynlo-meta-copy: #6b6b62;
+  --kynlo-meta-dark: #85867d;
+  --kynlo-meta-soft: #98978d;
+  --kynlo-meta-faint: #aaa89f;
+  --kynlo-axis: #8b8a81;
+  --kynlo-ring-track: #d9d5ca;
+  --kynlo-line: rgba(17, 18, 15, .22);
+  --kynlo-line-soft: rgba(17, 18, 15, .16);
+  --kynlo-line-faint: rgba(17, 18, 15, .14);
+  --kynlo-line-strong: rgba(17, 18, 15, .25);
+  --kynlo-light-12: rgba(241, 238, 229, .12);
+  --kynlo-light-14: rgba(241, 238, 229, .14);
+  --kynlo-light-20: rgba(241, 238, 229, .20);
+  --kynlo-light-22: rgba(241, 238, 229, .22);
+  --kynlo-light-25: rgba(241, 238, 229, .25);
+  --kynlo-light-36: rgba(241, 238, 229, .36);
+  --kynlo-light-45: rgba(241, 238, 229, .45);
+
+  /* Backward-compatible aliases. */
+  --ink: var(--kynlo-ink);
+  --bone: var(--kynlo-bone);
+  --paper: var(--kynlo-paper);
+  --signal: var(--kynlo-signal);
+  --line: var(--kynlo-line);
+
+  /* Font roles */
+  --kynlo-font-display: Georgia, "Times New Roman", serif;
+  --kynlo-font-technical: "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+
+  /* Type scale */
+  --kynlo-type-meta: .75rem;
+  --kynlo-type-quiet: .72rem;
+  --kynlo-type-action: .78rem;
+  --kynlo-type-body: 1rem;
+  --kynlo-type-body-lg: 1.08rem;
+  --kynlo-type-intro: 1.3rem;
+  --kynlo-type-state: clamp(2.2rem, 4vw, 4.4rem);
+  --kynlo-type-section: clamp(2.6rem, 5.2vw, 5.8rem);
+  --kynlo-type-hero: clamp(4.2rem, 10.5vw, 10.7rem);
+
+  /* Spacing */
+  --kynlo-space-1: 4px;
+  --kynlo-space-2: 8px;
+  --kynlo-space-3: 12px;
+  --kynlo-space-4: 18px;
+  --kynlo-space-5: 22px;
+  --kynlo-space-6: 24px;
+  --kynlo-space-7: 28px;
+  --kynlo-space-8: 32px;
+  --kynlo-space-9: 36px;
+  --kynlo-space-10: 40px;
+  --kynlo-space-12: 54px;
+  --kynlo-space-14: 64px;
+  --kynlo-gutter: 3.5vw;
+  --kynlo-section-gutter: 6vw;
+
+  /* Geometry and line weights */
+  --kynlo-radius-none: 0;
+  --kynlo-radius-document: 2px;
+  --kynlo-radius-round: 999px;
+  --kynlo-line-thin: 1px;
+  --kynlo-line-standard: 2px;
+  --kynlo-line-ring: 2.5px;
+  --kynlo-line-signal: 3px;
+  --kynlo-path-owner: 1.25px;
+  --kynlo-path-40: 1.55px;
+  --kynlo-path-60: 2.4px;
+
+  /* Motion */
+  --kynlo-motion-scroll: 120ms;
+  --kynlo-motion-ring: 180ms;
+  --kynlo-motion-state: 200ms;
+  --kynlo-motion-path: 280ms;
+  --kynlo-motion-reveal: 450ms;
+  --kynlo-motion-transform: 550ms;
+  --kynlo-motion-pulse: 1800ms;
+  --kynlo-ease-time: linear;
+  --kynlo-ease-state: cubic-bezier(.2, .75, .2, 1);
+  --kynlo-ease-reveal: ease;
+  --kynlo-ease-pulse: ease-out;
+  --kynlo-shadow-document: 0 24px 55px rgba(0, 0, 0, .14);
+  --kynlo-shadow-document-mobile: 0 16px 35px rgba(0, 0, 0, .12);
+}
