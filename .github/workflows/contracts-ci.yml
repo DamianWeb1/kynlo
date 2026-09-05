@@ -42,7 +42,11 @@ jobs:
           cache: npm
 
       - name: Install Solidity dependencies
-        run: npm ci --ignore-scripts
+        run: |
+          set -euo pipefail
+          npm ci --ignore-scripts
+          mkdir -p contracts/lib
+          cp -R node_modules/@openzeppelin/contracts contracts/lib/openzeppelin-contracts
 
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1.6.0
@@ -120,7 +124,6 @@ jobs:
 
       - name: Run coverage
         id: coverage
-        continue-on-error: true
         working-directory: contracts
         run: |
           set -o pipefail
@@ -206,13 +209,14 @@ jobs:
           FUZZ_TESTS: ${{ steps.fuzz_tests.outcome }}
           INVARIANT_TESTS: ${{ steps.invariant_tests.outcome }}
           COVERAGE: ${{ steps.coverage.outcome }}
+          SLITHER_GATE: ${{ steps.slither_gate.outcome }}
           CRITICAL: ${{ steps.slither_gate.outputs.critical }}
           HIGH: ${{ steps.slither_gate.outputs.high }}
           MEDIUM: ${{ steps.slither_gate.outputs.medium }}
           LOW: ${{ steps.slither_gate.outputs.low }}
         run: |
           ready="YES"
-          for result in "$FORGE_FMT" "$FORGE_BUILD" "$UNIT_TESTS" "$FUZZ_TESTS" "$INVARIANT_TESTS"; do
+          for result in "$FORGE_FMT" "$FORGE_BUILD" "$UNIT_TESTS" "$FUZZ_TESTS" "$INVARIANT_TESTS" "$COVERAGE" "$SLITHER_GATE"; do
             if [[ "$result" != "success" ]]; then
               ready="NO"
             fi
