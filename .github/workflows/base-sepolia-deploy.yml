@@ -161,67 +161,67 @@ jobs:
               raise SystemExit("Mock supply is too small for the live and fork smoke flows")
           PY
 
-      - name: Deploy production-compatible Registry and Vault
+      - name: Deploy and configure complete staging stack
         working-directory: contracts
+        shell: bash
         env:
           BASE_SEPOLIA_RPC_URL: ${{ secrets.BASE_SEPOLIA_RPC_URL }}
           BASE_SEPOLIA_DEPLOYER_PRIVATE_KEY: ${{ secrets.BASE_SEPOLIA_DEPLOYER_PRIVATE_KEY }}
           BASE_SEPOLIA_DEPLOYER_ADDRESS: ${{ secrets.BASE_SEPOLIA_DEPLOYER_ADDRESS }}
           BASE_SEPOLIA_REGISTRY_ADMIN: ${{ secrets.BASE_SEPOLIA_REGISTRY_ADMIN }}
-        run: |
-          forge script script/DeployBaseSepolia.s.sol:DeployBaseSepolia \
-            --rpc-url "$BASE_SEPOLIA_RPC_URL" \
-            --broadcast \
-            --slow
-
-      - name: Resolve production deployment addresses
-        shell: bash
-        run: |
-          run_file=contracts/broadcast/DeployBaseSepolia.s.sol/84532/run-latest.json
-          registry=$(jq -r '.transactions[] | select(.contractName == "KynloAssetRegistry") | .contractAddress' "$run_file")
-          vault=$(jq -r '.transactions[] | select(.contractName == "KynloVault") | .contractAddress' "$run_file")
-          test -n "$registry" && test "$registry" != "null"
-          test -n "$vault" && test "$vault" != "null"
-          echo "BASE_SEPOLIA_REGISTRY_ADDRESS=$registry" >> "$GITHUB_ENV"
-          echo "BASE_SEPOLIA_VAULT_ADDRESS=$vault" >> "$GITHUB_ENV"
-
-      - name: Deploy explicitly labelled MOCK-B20 asset
-        working-directory: contracts
-        env:
-          BASE_SEPOLIA_RPC_URL: ${{ secrets.BASE_SEPOLIA_RPC_URL }}
-          BASE_SEPOLIA_DEPLOYER_PRIVATE_KEY: ${{ secrets.BASE_SEPOLIA_DEPLOYER_PRIVATE_KEY }}
-          BASE_SEPOLIA_DEPLOYER_ADDRESS: ${{ secrets.BASE_SEPOLIA_DEPLOYER_ADDRESS }}
+          BASE_SEPOLIA_REGISTRY_ADMIN_PRIVATE_KEY: ${{ secrets.BASE_SEPOLIA_REGISTRY_ADMIN_PRIVATE_KEY }}
           BASE_SEPOLIA_MOCK_POLICY_ADMIN: ${{ secrets.BASE_SEPOLIA_MOCK_POLICY_ADMIN }}
           BASE_SEPOLIA_MOCK_INITIAL_HOLDER: ${{ secrets.BASE_SEPOLIA_OWNER_ADDRESS }}
           BASE_SEPOLIA_MOCK_INITIAL_RAW_AMOUNT: ${{ vars.BASE_SEPOLIA_MOCK_INITIAL_RAW_AMOUNT }}
         run: |
-          forge script script/DeployMockB20Asset.s.sol:DeployMockB20Asset \
-            --rpc-url "$BASE_SEPOLIA_RPC_URL" \
-            --broadcast \
-            --slow
+          set -euo pipefail
+          script=script/DeployBaseSepoliaStaging.s.sol:DeployBaseSepoliaStaging
+          if ! forge script "$script" --rpc-url "$BASE_SEPOLIA_RPC_URL" --broadcast --slow; then
+            echo "Initial broadcast did not finish cleanly. Waiting for RPC nonce state, then resuming."
+            for attempt in 1 2 3; do
+              sleep 12
+              if forge script "$script" --rpc-url "$BASE_SEPOLIA_RPC_URL" --broadcast --slow --resume; then
+                exit 0
+              fi
+              echo "Resume attempt $attempt did not finish cleanly."
+            done
+            exit 1
+          fi
 
-      - name: Resolve mock asset address
+      - name: Resolve staging deployment addresses
         shell: bash
         run: |
-          run_file=contracts/broadcast/DeployMockB20Asset.s.sol/84532/run-latest.json
-          asset=$(jq -r '.transactions[] | select(.contractName == "MockB20PolicyAsset") | .contractAddress' "$run_file")
+          run_file=contracts/broadcast/DeployBaseSepoliaStaging.s.sol/84532/run-latest.json
+          registry=$(jq -r '.transactions[] | select(.contractName == "KynloAssetRegistry") | .contractAddress' "$run_file" | tail -n 1)
+          vault=$(jq -r '.transactions[] | select(.contractName == "KynloVault") | .contractAddress' "$run_file" | tail -n 1)
+          asset=$(jq -r '.transactions[] | select(.contractName == "MockB20PolicyAsset") | .contractAddress' "$run_file" | tail -n 1)
+          test -n "$registry" && test "$registry" != "null"
+          test -n "$vault" && test "$vault" != "null"
           test -n "$asset" && test "$asset" != "null"
+          echo "BASE_SEPOLIA_REGISTRY_ADDRESS=$registry" >> "$GITHUB_ENV"
+          echo "BASE_SEPOLIA_VAULT_ADDRESS=$vault" >> "$GITHUB_ENV"
           echo "BASE_SEPOLIA_MOCK_ASSET_ADDRESS=$asset" >> "$GITHUB_ENV"
 
-      - name: Admit MOCK-B20 for new deposits
-        working-directory: contracts
+      - name: Verify staging wiring onchain
+        shell: bash
         env:
           BASE_SEPOLIA_RPC_URL: ${{ secrets.BASE_SEPOLIA_RPC_URL }}
           BASE_SEPOLIA_REGISTRY_ADMIN: ${{ secrets.BASE_SEPOLIA_REGISTRY_ADMIN }}
-          BASE_SEPOLIA_REGISTRY_ADMIN_PRIVATE_KEY: ${{ secrets.BASE_SEPOLIA_REGISTRY_ADMIN_PRIVATE_KEY }}
         run: |
-          forge script script/ConfigureBaseSepoliaRegistry.s.sol:ConfigureBaseSepoliaRegistry \
-            --rpc-url "$BASE_SEPOLIA_RPC_URL" \
-            --broadcast \
-            --slow
+          set -euo pipefail
+          test "$(cast code "$BASE_SEPOLIA_REGISTRY_ADDRESS" --rpc-url "$BASE_SEPOLIA_RPC_URL")" != "0x"
+          test "$(cast code "$BASE_SEPOLIA_VAULT_ADDRESS" --rpc-url "$BASE_SEPOLIA_RPC_URL")" != "0x"
+          test "$(cast code "$BASE_SEPOLIA_MOCK_ASSET_ADDRESS" --rpc-url "$BASE_SEPOLIA_RPC_URL")" != "0x"
+          registry_owner=$(cast call "$BASE_SEPOLIA_REGISTRY_ADDRESS" 'owner()(address)' --rpc-url "$BASE_SEPOLIA_RPC_URL")
+          test "${registry_owner,,}" = "${BASE_SEPOLIA_REGISTRY_ADMIN,,}"
+          supported=$(cast call "$BASE_SEPOLIA_REGISTRY_ADDRESS" 'isSupportedStock(address)(bool)' "$BASE_SEPOLIA_MOCK_ASSET_ADDRESS" --rpc-url "$BASE_SEPOLIA_RPC_URL")
+          test "$supported" = "true"
+          wired_registry=$(cast call "$BASE_SEPOLIA_VAULT_ADDRESS" 'assetRegistry()(address)' --rpc-url "$BASE_SEPOLIA_RPC_URL")
+          test "${wired_registry,,}" = "${BASE_SEPOLIA_REGISTRY_ADDRESS,,}"
 
       - name: Run live multi-wallet smoke flow
         working-directory: contracts
+        shell: bash
         env:
           BASE_SEPOLIA_RPC_URL: ${{ secrets.BASE_SEPOLIA_RPC_URL }}
           BASE_SEPOLIA_SMOKE_RAW_AMOUNT: ${{ vars.BASE_SEPOLIA_SMOKE_RAW_AMOUNT }}
@@ -232,10 +232,19 @@ jobs:
           BASE_SEPOLIA_SUCCESSOR_B_PRIVATE_KEY: ${{ secrets.BASE_SEPOLIA_SUCCESSOR_B_PRIVATE_KEY }}
           BASE_SEPOLIA_SUCCESSOR_B_ADDRESS: ${{ secrets.BASE_SEPOLIA_SUCCESSOR_B_ADDRESS }}
         run: |
-          forge script script/SmokeBaseSepolia.s.sol:SmokeBaseSepolia \
-            --rpc-url "$BASE_SEPOLIA_RPC_URL" \
-            --broadcast \
-            --slow
+          set -euo pipefail
+          script=script/SmokeBaseSepolia.s.sol:SmokeBaseSepolia
+          if ! forge script "$script" --rpc-url "$BASE_SEPOLIA_RPC_URL" --broadcast --slow; then
+            echo "Smoke broadcast did not finish cleanly. Waiting for RPC nonce state, then resuming."
+            for attempt in 1 2 3; do
+              sleep 12
+              if forge script "$script" --rpc-url "$BASE_SEPOLIA_RPC_URL" --broadcast --slow --resume; then
+                exit 0
+              fi
+              echo "Smoke resume attempt $attempt did not finish cleanly."
+            done
+            exit 1
+          fi
 
       - name: Run complete production-timing lifecycle on a Sepolia fork
         working-directory: contracts
@@ -302,8 +311,8 @@ jobs:
           BASE_SEPOLIA_REGISTRY_ADMIN: ${{ secrets.BASE_SEPOLIA_REGISTRY_ADMIN }}
         run: |
           node scripts/record-base-sepolia-deployment.mjs \
-            --production-run contracts/broadcast/DeployBaseSepolia.s.sol/84532/run-latest.json \
-            --mock-run contracts/broadcast/DeployMockB20Asset.s.sol/84532/run-latest.json \
+            --production-run contracts/broadcast/DeployBaseSepoliaStaging.s.sol/84532/run-latest.json \
+            --mock-run contracts/broadcast/DeployBaseSepoliaStaging.s.sol/84532/run-latest.json \
             --source-commit "$KYNLO_SOURCE_COMMIT" \
             --deployer "$BASE_SEPOLIA_DEPLOYER_ADDRESS" \
             --registry-admin "$BASE_SEPOLIA_REGISTRY_ADMIN" \
@@ -316,9 +325,7 @@ jobs:
           name: kynlo-base-sepolia-deployment-${{ github.run_id }}
           path: |
             deployments/base-sepolia.json
-            contracts/broadcast/DeployBaseSepolia.s.sol/84532/run-latest.json
-            contracts/broadcast/DeployMockB20Asset.s.sol/84532/run-latest.json
-            contracts/broadcast/ConfigureBaseSepoliaRegistry.s.sol/84532/run-latest.json
+            contracts/broadcast/DeployBaseSepoliaStaging.s.sol/84532/run-latest.json
             contracts/broadcast/SmokeBaseSepolia.s.sol/84532/run-latest.json
           if-no-files-found: warn
           retention-days: 30
