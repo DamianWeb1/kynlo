@@ -30,3 +30,19 @@ test("keeps the lifecycle final hold contract", async () => {
   assert.match(page, /timeline >= 0\.96 \? 0\.98/);
   assert.match(page, /progress >= 0\.96 \? 1/);
 });
+
+test("uses the Kynlo asset register instead of a native browser select", async () => {
+  const page = await readFile(new URL("../app/page.tsx", import.meta.url), "utf8");
+
+  assert.doesNotMatch(page, /<select/);
+  assert.match(page, /className="asset-select-trigger"/);
+  assert.match(page, /role="listbox"/);
+  assert.match(page, /aria-selected=/);
+});
+
+test("reserves a separate lifecycle band for the resolved ownership graph", async () => {
+  const lifecycle = await readFile(new URL("../app/lifecycle.css", import.meta.url), "utf8");
+
+  assert.match(lifecycle, /ownership-graph\{[^}]*-36px/);
+  assert.match(lifecycle, /ownership-graph\{width:min\(92vw,680px\);bottom:-20px\}/);
+});

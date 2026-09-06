@@ -29,6 +29,7 @@ export default function Home() {
   const [reducedMotion, setReducedMotion] = useState(false);
   const [mobileMode, setMobileMode] = useState(false);
   const [selectedAsset, setSelectedAsset] = useState("NVDA");
+  const [assetMenuOpen, setAssetMenuOpen] = useState(false);
   const lifecycleRef = useRef<HTMLElement>(null);
   const frameRef = useRef<number | null>(null);
   const lastProgressRef = useRef(-1);
@@ -114,7 +115,17 @@ export default function Home() {
     <section className="asset-library" id="assets">
       <div className="asset-intro"><p className="eyebrow">THE ASSET LIBRARY</p><h2>Built for ownership,<br /><em>not speculation.</em></h2><p>Kynlo is designed around eligible Coinbase Tokenized Stocks on Base. The live Sepolia beta uses MOCK-B20 while production assets remain registry-gated.</p></div>
       <div className="asset-selector-shell">
-        <label className="asset-select-label" htmlFor="asset-select"><span>SELECT ASSET</span><select id="asset-select" value={selectedAsset} onChange={(event) => setSelectedAsset(event.target.value)}>{stocks.map(([ticker, name]) => <option value={ticker} key={ticker}>{ticker} · {name}</option>)}</select></label>
+        <div className="asset-select-label" onKeyDown={(event) => { if (event.key === "Escape") setAssetMenuOpen(false); }}>
+          <span>SELECT ASSET</span>
+          <button className="asset-select-trigger" type="button" aria-expanded={assetMenuOpen} aria-controls="asset-register" onClick={() => setAssetMenuOpen((open) => !open)}>
+            <span><b>{activeAsset[0]}</b><i>{activeAsset[1]}</i></span>
+            <span aria-hidden="true">{assetMenuOpen ? "CLOSE ↑" : "OPEN INDEX ↓"}</span>
+          </button>
+        </div>
+        {assetMenuOpen && <div className="asset-register" id="asset-register" role="listbox" aria-label="Available asset records">
+          <div className="asset-register-heading"><span>BASE ASSET INDEX</span><span>{String(stocks.length).padStart(2, "0")} RECORDS</span></div>
+          <div className="asset-register-grid">{stocks.map(([ticker, name], index) => <button type="button" role="option" aria-selected={ticker === selectedAsset} className={ticker === selectedAsset ? "is-selected" : ""} value={ticker} key={ticker} onClick={() => { setSelectedAsset(ticker); setAssetMenuOpen(false); }}><small>{String(index + 1).padStart(2, "0")}</small><strong>{ticker}</strong><span>{name}</span><i aria-hidden="true">{ticker === selectedAsset ? "●" : "→"}</i></button>)}</div>
+        </div>}
         <article className="selected-asset"><div><small>SELECTED RECORD</small><strong>{activeAsset[0]}</strong><span>{activeAsset[1]}</span></div><b>BASE</b><p>Preview only. Base Sepolia executes against the admitted MOCK-B20 staging asset.</p></article>
       </div>
       <p className="asset-note">DISPLAY LIBRARY · PRODUCTION SUPPORT REQUIRES OFFICIAL REGISTRY ADMISSION AND ISSUER ELIGIBILITY</p>
