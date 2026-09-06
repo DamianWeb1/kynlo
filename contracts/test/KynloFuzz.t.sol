@@ -19,7 +19,6 @@ contract KynloVaultFuzzTest is KynloTestBase {
         vm.prank(OWNER);
         uint256 planId = vault.createLegacyPlan(list, 90 days, 30 days);
         _deposit(planId, stock, amount);
-        _acceptAll(planId);
         vm.prank(OWNER);
         vault.armLegacyPlan(planId);
         _mature(planId);
@@ -55,7 +54,6 @@ contract KynloVaultFuzzTest is KynloTestBase {
         vm.prank(OWNER);
         uint256 planId = vault.createLegacyPlan(_twoSuccessors(), inactivity, protection);
         _deposit(planId, stock, 1);
-        _acceptAll(planId);
         vm.prank(OWNER);
         vault.armLegacyPlan(planId);
         (,, uint64 checkedInAt,,,,,,) = vault.legacyPlans(planId);

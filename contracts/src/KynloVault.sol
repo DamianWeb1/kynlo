@@ -57,7 +57,6 @@ contract KynloVault is ReentrancyGuard {
     mapping(uint256 planId => Successor[]) private _successors;
     mapping(uint256 planId => AssetPosition[]) private _assets;
     mapping(uint256 planId => mapping(address token => uint256 indexPlusOne)) private _assetIndex;
-    mapping(uint256 planId => mapping(address successor => uint32 version)) public acceptedVersion;
     mapping(uint256 planId => mapping(address successor => mapping(address token => bool))) public
         claimed;
     mapping(address token => uint256 rawAmount) public totalAttributed;
@@ -72,8 +71,6 @@ contract KynloVault is ReentrancyGuard {
     error UnsafeTiming();
     error WrongState(PlanState current);
     error SuccessorNotListed();
-    error AlreadyAccepted();
-    error AcceptancesIncomplete();
     error UnsupportedStock();
     error DepositsPaused();
     error InvalidAmount();
@@ -86,9 +83,6 @@ contract KynloVault is ReentrancyGuard {
     error NoClaimEntitlement();
 
     event LegacyPlanCreated(uint256 indexed planId, address indexed owner, uint32 successorVersion);
-    event SuccessorAccepted(
-        uint256 indexed planId, address indexed successor, uint32 successorVersion
-    );
     event LegacyPlanArmed(uint256 indexed planId, uint64 lastCheckIn);
     event ProofOfLifeCheckedIn(uint256 indexed planId, uint64 lastCheckIn);
     event SuccessorsUpdated(uint256 indexed planId, uint32 successorVersion);
@@ -133,23 +127,11 @@ contract KynloVault is ReentrancyGuard {
         emit LegacyPlanCreated(planId, msg.sender, 1);
     }
 
-    function acceptSuccessor(uint256 planId) external {
-        LegacyPlan storage plan = _plan(planId);
-        PlanState state = getEffectiveState(planId);
-        if (state != PlanState.DRAFT) revert WrongState(state);
-        if (!_isListed(planId, msg.sender)) revert SuccessorNotListed();
-        if (acceptedVersion[planId][msg.sender] == plan.successorVersion) revert AlreadyAccepted();
-
-        acceptedVersion[planId][msg.sender] = plan.successorVersion;
-        emit SuccessorAccepted(planId, msg.sender, plan.successorVersion);
-    }
-
     function armLegacyPlan(uint256 planId) external {
         LegacyPlan storage plan = _ownedPlan(planId);
         PlanState state = getEffectiveState(planId);
         if (state != PlanState.DRAFT) revert WrongState(state);
         if (!_hasAssets(planId)) revert NoAssets();
-        if (!isFullyAccepted(planId)) revert AcceptancesIncomplete();
 
         plan.armed = true;
         plan.lastCheckIn = uint64(block.timestamp);
@@ -263,9 +245,7 @@ contract KynloVault is ReentrancyGuard {
         if (getEffectiveState(planId) != PlanState.SUCCESSION_READY) revert ClaimUnavailable();
 
         (uint256 successorIndex, bool listed) = _successorIndex(planId, msg.sender);
-        if (!listed || acceptedVersion[planId][msg.sender] != plan.successorVersion) {
-            revert SuccessorNotListed();
-        }
+        if (!listed) revert SuccessorNotListed();
         if (claimed[planId][msg.sender][token]) revert AlreadyClaimed();
 
         AssetPosition storage position = _position(planId, token);
@@ -308,15 +288,6 @@ contract KynloVault is ReentrancyGuard {
     function getAssets(uint256 planId) external view returns (AssetPosition[] memory) {
         _plan(planId);
         return _assets[planId];
-    }
-
-    function isFullyAccepted(uint256 planId) public view returns (bool) {
-        LegacyPlan storage plan = _plan(planId);
-        Successor[] storage list = _successors[planId];
-        for (uint256 i; i < list.length; ++i) {
-            if (acceptedVersion[planId][list[i].account] != plan.successorVersion) return false;
-        }
-        return true;
     }
 
     function _plan(uint256 planId) internal view returns (LegacyPlan storage plan) {
@@ -367,11 +338,6 @@ contract KynloVault is ReentrancyGuard {
         for (uint256 i; i < list.length; ++i) {
             _successors[planId].push(list[i]);
         }
-    }
-
-    function _isListed(uint256 planId, address account) internal view returns (bool) {
-        (, bool listed) = _successorIndex(planId, account);
-        return listed;
     }
 
     function _successorIndex(uint256 planId, address account)

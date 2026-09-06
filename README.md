@@ -12,7 +12,7 @@ Status: product foundation and unaudited contract model. It is not cleared for d
 - `deployments`: explicit staging and production deployment records.
 - `docs`: architecture, threat model, legal boundary, verification record, and runbooks.
 
-The chain controls custody state. `KynloAssetRegistry` allows verified stock addresses for new deposits. `KynloVault` holds raw token units and enforces Legacy Plan timing, Successor acceptance, Proof of Life, the Protection Window, and Succession. Registry administration cannot transfer user assets.
+The chain controls custody state. `KynloAssetRegistry` allows verified stock addresses for new deposits. `KynloVault` holds raw token units and enforces Legacy Plan timing, exact Successor claim authority, Proof of Life, the Protection Window, and Succession. Registry administration cannot transfer user assets.
 
 ## Local setup
 
@@ -51,8 +51,8 @@ Base Sepolia readiness. The workflow does not deploy contracts.
 
 - Production timers enforce at least 90 days of inactivity and a 30-day Protection Window.
 - One to three Successors must allocate exactly 10,000 basis points.
-- Every current Successor accepts before the owner seals the Legacy Plan.
-- Editing Successors invalidates every prior acceptance.
+- The owner assigns exact receiving wallets and can Seal without a Successor transaction.
+- Editing Successors increments the configuration version, returns the plan to Draft, and requires a fresh Seal.
 - New deposits accept registry-enabled official stock contracts only.
 - Registry disablement and the deposit pause never block existing exits.
 - Kynlo does not detect death or replace a legal will, probate, or estate law.

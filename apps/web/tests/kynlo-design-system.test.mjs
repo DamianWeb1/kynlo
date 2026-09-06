@@ -46,3 +46,27 @@ test("reserves a separate lifecycle band for the resolved ownership graph", asyn
   assert.match(lifecycle, /ownership-graph\{[^}]*-36px/);
   assert.match(lifecycle, /ownership-graph\{width:min\(92vw,680px\);bottom:-20px\}/);
 });
+
+test("supports email and wallet Kynlo accounts with verified email", async () => {
+  const provider = await readFile(new URL("../components/kynlo/kynlo-account-provider.tsx", import.meta.url), "utf8");
+  const layout = await readFile(new URL("../app/layout.tsx", import.meta.url), "utf8");
+  const access = await readFile(new URL("../components/kynlo/account-access.tsx", import.meta.url), "utf8");
+
+  assert.match(layout, /projectId=\{cdpProjectId\}/);
+  assert.match(provider, /createOnLogin:\s*"smart"/);
+  assert.match(provider, /authMethods:\s*\["email",\s*"siwe:base"\]/);
+  assert.match(access, /useSignInWithEmail/);
+  assert.match(access, /useSignInWithSiwe/);
+  assert.match(access, /useLinkEmail/);
+  assert.match(access, /Wallet verified\. Add your email/);
+});
+
+test("assigns Successors without a pre-Seal approval transaction", async () => {
+  const composer = await readFile(new URL("../components/kynlo/base-sepolia-beta.tsx", import.meta.url), "utf8");
+
+  assert.match(composer, /CONTACT EMAIL · OPTIONAL/);
+  assert.match(composer, /WALLET SETUP REQUIRED/);
+  assert.match(composer, /Assigned Successors do not approve the plan/);
+  assert.doesNotMatch(composer, /acceptSuccessor/);
+  assert.doesNotMatch(composer, /ACCEPT AS CONNECTED WALLET/);
+});

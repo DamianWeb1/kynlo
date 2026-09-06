@@ -132,18 +132,13 @@ contract ForkLifecycleBaseSepolia is BaseSepoliaScript {
         config.vault.depositAsset(planId, address(config.asset), config.rawAmount);
         vm.stopPrank();
 
-        vm.prank(STRANGER);
-        (bool strangerAccepted,) =
-            address(config.vault).call(abi.encodeCall(KynloVault.acceptSuccessor, (planId)));
-        _assert(!strangerAccepted, "stranger acceptance rejected");
-
-        _accept(config.vault, planId, config.successorA, config.successorB);
-
         KynloVault.Successor[] memory revised = _successors(config, 5_000, 5_000);
         vm.prank(config.owner);
         config.vault.updateSuccessors(planId, revised);
-        _assert(!config.vault.isFullyAccepted(planId), "stale acceptance invalidated");
-        _accept(config.vault, planId, config.successorA, config.successorB);
+        _assert(
+            config.vault.getEffectiveState(planId) == KynloVault.PlanState.DRAFT,
+            "successor update returns draft"
+        );
 
         vm.startPrank(config.owner);
         config.vault.armLegacyPlan(planId);
@@ -265,16 +260,6 @@ contract ForkLifecycleBaseSepolia is BaseSepoliaScript {
         list = new KynloVault.Successor[](2);
         list[0] = KynloVault.Successor(config.successorA, shareA);
         list[1] = KynloVault.Successor(config.successorB, shareB);
-    }
-
-    function _accept(KynloVault vault, uint256 planId, address successorA, address successorB)
-        internal
-    {
-        vm.prank(successorA);
-        vault.acceptSuccessor(planId);
-        vm.prank(successorB);
-        vault.acceptSuccessor(planId);
-        _assert(vault.isFullyAccepted(planId), "successor acceptance");
     }
 
     function _lastCheckIn(KynloVault vault, uint256 planId) internal view returns (uint64 value) {

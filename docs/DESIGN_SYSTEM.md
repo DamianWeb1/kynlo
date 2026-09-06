@@ -198,7 +198,7 @@ Canonical styled patterns:
 - `.story-copy`, lifecycle and Legacy Plan narrative hierarchy
 - `.kynlo-calm-surface`, Protection and transaction-critical calm state
 
-Seal, beneficiary acceptance, claims, wallet connection, transaction simulation, and live Legacy Plan screens are not present in the current frontend. Their future components must extend the canonical patterns above. They must not invent parallel visual versions.
+Seal, Successor account setup, claims, wallet connection, transaction simulation, and live Legacy Plan screens extend the canonical patterns above. They must not invent parallel visual versions.
 
 ## Screen regression rule
 
@@ -218,4 +218,4 @@ If a feature conflicts with a frozen rule, stop before changing it. Report the r
 - The Kynlo mark and lifecycle ring were local homepage functions instead of shared components.
 - A compact ownership graph appeared outside its product context in the Vault and was removed before the freeze.
 - The final-quality stylesheet corrected base rules through overrides. Those rules were merged into the canonical base stylesheet.
-- Transaction, Seal, Legacy Plan Composer, beneficiary acceptance, and claim screens do not yet exist in this frontend. Standardizing their detailed layouts now would invent unapproved screens, so only their governing rules are frozen.
+- Transaction, Seal, Legacy Plan Composer, Successor account setup, and claim screens must follow the frozen governing rules and reuse the canonical components above.

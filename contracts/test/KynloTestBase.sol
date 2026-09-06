@@ -47,17 +47,9 @@ abstract contract KynloTestBase is TestBase {
         vm.stopPrank();
     }
 
-    function _acceptAll(uint256 planId) internal {
-        vm.prank(SUCCESSOR_A);
-        vault.acceptSuccessor(planId);
-        vm.prank(SUCCESSOR_B);
-        vault.acceptSuccessor(planId);
-    }
-
     function _activePlan(uint256 amount) internal returns (uint256 planId) {
         planId = _create();
         _deposit(planId, stock, amount);
-        _acceptAll(planId);
         vm.prank(OWNER);
         vault.armLegacyPlan(planId);
     }

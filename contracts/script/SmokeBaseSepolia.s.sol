@@ -14,9 +14,7 @@ contract SmokeBaseSepolia is BaseSepoliaScript {
         address mockAsset;
         uint256 ownerKey;
         address owner;
-        uint256 successorAKey;
         address successorA;
-        uint256 successorBKey;
         address successorB;
         uint256 rawAmount;
     }
@@ -37,12 +35,8 @@ contract SmokeBaseSepolia is BaseSepoliaScript {
 
         (config.ownerKey, config.owner) =
             _validatedKey("BASE_SEPOLIA_OWNER_PRIVATE_KEY", "BASE_SEPOLIA_OWNER_ADDRESS");
-        (config.successorAKey, config.successorA) = _validatedKey(
-            "BASE_SEPOLIA_SUCCESSOR_A_PRIVATE_KEY", "BASE_SEPOLIA_SUCCESSOR_A_ADDRESS"
-        );
-        (config.successorBKey, config.successorB) = _validatedKey(
-            "BASE_SEPOLIA_SUCCESSOR_B_PRIVATE_KEY", "BASE_SEPOLIA_SUCCESSOR_B_ADDRESS"
-        );
+        config.successorA = _requiredAddress("BASE_SEPOLIA_SUCCESSOR_A_ADDRESS");
+        config.successorB = _requiredAddress("BASE_SEPOLIA_SUCCESSOR_B_ADDRESS");
         config.rawAmount = vm.envUint("BASE_SEPOLIA_SMOKE_RAW_AMOUNT");
         if (config.rawAmount == 0) revert InvalidAmount("BASE_SEPOLIA_SMOKE_RAW_AMOUNT");
 
@@ -63,14 +57,6 @@ contract SmokeBaseSepolia is BaseSepoliaScript {
         vault.depositAsset(planId, config.mockAsset, config.rawAmount);
         vm.stopBroadcast();
 
-        vm.startBroadcast(config.successorAKey);
-        vault.acceptSuccessor(planId);
-        vm.stopBroadcast();
-
-        vm.startBroadcast(config.successorBKey);
-        vault.acceptSuccessor(planId);
-        vm.stopBroadcast();
-
         vm.startBroadcast(config.ownerKey);
         vault.armLegacyPlan(planId);
         vault.checkIn(planId);
@@ -83,7 +69,7 @@ contract SmokeBaseSepolia is BaseSepoliaScript {
             revert SmokeAssertionFailed();
         }
         (address planOwner,,,,,,,,) = vault.legacyPlans(planId);
-        if (planOwner != config.owner || !vault.isFullyAccepted(planId)) {
+        if (planOwner != config.owner) {
             revert SmokeAssertionFailed();
         }
         KynloVault.AssetPosition[] memory assets = vault.getAssets(planId);

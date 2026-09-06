@@ -40,29 +40,10 @@ export function HeaderWalletButton() {
     };
   }, []);
 
-  const connect = async () => {
-    const provider = window.ethereum;
-    if (!provider) {
-      window.location.hash = "beta";
-      return;
-    }
-    await provider.request({ method: "eth_requestAccounts" });
-    const chain = await provider.request({ method: "eth_chainId" });
-    if (chain !== BASE_SEPOLIA_CHAIN_ID) {
-      try {
-        await provider.request({ method: "wallet_switchEthereumChain", params: [{ chainId: BASE_SEPOLIA_CHAIN_ID }] });
-      } catch {
-        window.location.hash = "beta";
-      }
-    }
-    const accounts = await provider.request({ method: "eth_accounts" });
-    const list = Array.isArray(accounts) ? accounts : [];
-    setAccount(typeof list[0] === "string" ? list[0] : "");
-    setChainId(typeof chain === "string" ? chain : "");
-  };
+  const openAccount = () => document.getElementById("account")?.scrollIntoView({ behavior: "smooth" });
 
-  return <button className="header-wallet" onClick={connect}>
+  return <button className="header-wallet" onClick={openAccount}>
     <span className={chainId === BASE_SEPOLIA_CHAIN_ID && account ? "wallet-live" : ""} />
-    {account ? short(account) : "CONNECT WALLET"}
+    {account ? short(account) : "SIGN IN"}
   </button>;
 }

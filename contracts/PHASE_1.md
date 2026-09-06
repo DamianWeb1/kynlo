@@ -52,8 +52,8 @@ No accelerated timing exists in this production contract.
 Foundry tests cover:
 
 - plan validation for successor count, addresses, uniqueness, owner exclusion, positive shares, exact basis-point totals, and production timing minima
-- exact-wallet acceptance, stranger rejection, duplicate acceptance, complete acceptance before arming, and nonzero asset requirements
-- address and allocation changes invalidating all prior acceptance through `successorVersion`
+- exact receiving-wallet claim authority, stranger claim rejection, owner-only arming, and nonzero asset requirements
+- address and allocation changes returning the configuration to Draft through `successorVersion`
 - exact Active, Protection, and Succession Ready timestamp boundaries
 - Protection recovery and frozen mutations
 - forbidden mature mutations

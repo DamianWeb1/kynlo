@@ -141,43 +141,17 @@ contract KynloAssetRegistryTest is KynloTestBase {
     }
 }
 
-contract KynloVaultAcceptanceTest is KynloTestBase {
-    function testExactSuccessorWalletCanAccept() public {
-        uint256 planId = _create();
-        vm.prank(SUCCESSOR_A);
-        vault.acceptSuccessor(planId);
-        assertEq(vault.acceptedVersion(planId, SUCCESSOR_A), 1);
-    }
-
-    function testStrangerCannotAccept() public {
-        uint256 planId = _create();
-        vm.expectRevert(KynloVault.SuccessorNotListed.selector);
-        vm.prank(STRANGER);
-        vault.acceptSuccessor(planId);
-    }
-
-    function testDuplicateAcceptanceRejected() public {
-        uint256 planId = _create();
-        vm.prank(SUCCESSOR_A);
-        vault.acceptSuccessor(planId);
-        vm.expectRevert(KynloVault.AlreadyAccepted.selector);
-        vm.prank(SUCCESSOR_A);
-        vault.acceptSuccessor(planId);
-    }
-
-    function testArmRequiresAllAcceptance() public {
+contract KynloVaultSealTest is KynloTestBase {
+    function testOwnerCanArmWithoutSuccessorAction() public {
         uint256 planId = _create();
         _deposit(planId, stock, 100);
-        vm.prank(SUCCESSOR_A);
-        vault.acceptSuccessor(planId);
-        vm.expectRevert(KynloVault.AcceptancesIncomplete.selector);
         vm.prank(OWNER);
         vault.armLegacyPlan(planId);
+        assertEq(uint256(vault.getEffectiveState(planId)), uint256(KynloVault.PlanState.ACTIVE));
     }
 
     function testArmRequiresAssets() public {
         uint256 planId = _create();
-        _acceptAll(planId);
         vm.expectRevert(KynloVault.NoAssets.selector);
         vm.prank(OWNER);
         vault.armLegacyPlan(planId);
@@ -188,13 +162,12 @@ contract KynloVaultAcceptanceTest is KynloTestBase {
         _deposit(planId, stock, 100);
         vm.prank(OWNER);
         vault.withdrawAsset(planId, address(stock), 100);
-        _acceptAll(planId);
         vm.expectRevert(KynloVault.NoAssets.selector);
         vm.prank(OWNER);
         vault.armLegacyPlan(planId);
     }
 
-    function testSuccessorUpdateInvalidatesEveryAcceptanceAndReturnsDraft() public {
+    function testSuccessorUpdateIncrementsVersionAndReturnsDraft() public {
         uint256 planId = _activePlan(100);
         KynloVault.Successor[] memory next = new KynloVault.Successor[](2);
         next[0] = KynloVault.Successor(SUCCESSOR_A, 5_000);
@@ -202,16 +175,14 @@ contract KynloVaultAcceptanceTest is KynloTestBase {
         vm.prank(OWNER);
         vault.updateSuccessors(planId, next);
 
-        assertFalse(vault.isFullyAccepted(planId));
         assertEq(uint256(vault.getEffectiveState(planId)), uint256(KynloVault.PlanState.DRAFT));
         (,, uint64 lastCheckIn,,, uint32 version, bool armed,,) = vault.legacyPlans(planId);
         assertEq(version, 2);
         assertEq(lastCheckIn, 0);
         assertFalse(armed);
-        assertTrue(vault.acceptedVersion(planId, SUCCESSOR_A) != version);
     }
 
-    function testAllocationOnlyUpdateAlsoInvalidatesEveryAcceptance() public {
+    function testAllocationOnlyUpdateIncrementsVersionAndReturnsDraft() public {
         uint256 planId = _activePlan(100);
         KynloVault.Successor[] memory next = new KynloVault.Successor[](2);
         next[0] = KynloVault.Successor(SUCCESSOR_A, 7_000);
@@ -219,11 +190,11 @@ contract KynloVaultAcceptanceTest is KynloTestBase {
         vm.prank(OWNER);
         vault.updateSuccessors(planId, next);
 
-        assertFalse(vault.isFullyAccepted(planId));
-        (,,,,, uint32 version,,,) = vault.legacyPlans(planId);
+        (,, uint64 lastCheckIn,,, uint32 version, bool armed,,) = vault.legacyPlans(planId);
         assertEq(version, 2);
-        assertTrue(vault.acceptedVersion(planId, SUCCESSOR_A) != version);
-        assertTrue(vault.acceptedVersion(planId, SUCCESSOR_B) != version);
+        assertEq(lastCheckIn, 0);
+        assertFalse(armed);
+        assertEq(uint256(vault.getEffectiveState(planId)), uint256(KynloVault.PlanState.DRAFT));
     }
 }
 
