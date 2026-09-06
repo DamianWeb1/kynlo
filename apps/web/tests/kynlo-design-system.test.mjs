@@ -26,7 +26,7 @@ test("exports the canonical Kynlo visual components", async () => {
 test("keeps the lifecycle final hold contract", async () => {
   const page = await readFile(new URL("../app/page.tsx", import.meta.url), "utf8");
 
-  assert.match(page, /raw < 0\.82/);
+  assert.match(page, /raw < 0\.88/);
   assert.match(page, /timeline >= 0\.96 \? 0\.98/);
   assert.match(page, /progress >= 0\.96 \? 1/);
 });
