@@ -90,8 +90,8 @@ forge script script/SmokeBaseSepolia.s.sol:SmokeBaseSepolia \
   --rpc-url "$BASE_SEPOLIA_RPC_URL" --broadcast
 ```
 
-This executes plan creation, an exact token approval, deposit, assignment of two receiving
-wallets, Seal, and Proof of Life. It verifies the final Active state and attributable accounting.
+This executes plan creation with two assigned receiving wallets, an exact token approval,
+deposit, Seal, and Proof of Life. It verifies the final Active state and attributable accounting.
 
 ## Full lifecycle
 
