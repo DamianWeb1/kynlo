@@ -23,6 +23,15 @@ const eslintConfig = defineConfig([
       "react-hooks/set-state-in-effect": "off",
     },
   },
+  {
+    files: ["components/kynlo/base-sepolia-beta.tsx"],
+    rules: {
+      // The beta console synchronizes React state with MetaMask, chain state,
+      // contract bytecode and localStorage. Those are external systems and the
+      // synchronization intentionally occurs from effects.
+      "react-hooks/set-state-in-effect": "off",
+    },
+  },
 ]);
 
 export default eslintConfig;
