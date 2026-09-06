@@ -1,0 +1,65 @@
+@media (max-width: 560px) {
+  html, body { width: 100%; overflow-x: hidden; }
+  main { width: 100%; overflow: clip; }
+
+  .hero { min-height: 100svh; padding: 112px 16px 32px; gap: 28px; }
+  .hero::after { width: 92vw; right: -52vw; top: 24vh; }
+  .hero .eyebrow { max-width: 76%; line-height: 1.5; }
+  .hero h1 { font-size: clamp(3.55rem, 18vw, 5.2rem); line-height: .84; overflow-wrap: normal; }
+  .hero-bottom { width: 100%; gap: 28px; }
+  .hero-bottom > p { max-width: 92%; font-size: 1rem; line-height: 1.5; }
+  .primary-action { width: 100%; min-width: 0; min-height: 52px; align-items: center; }
+  .folio { top: 86px; right: 16px; }
+
+  .vault-preview { min-height: auto; padding: 72px 16px; gap: 42px; overflow: hidden; }
+  .section-heading h2 { font-size: clamp(2.8rem, 13vw, 4rem); }
+  .certificate-stack { min-height: 300px; width: 100%; }
+  .certificate { position: relative; inset: auto; width: 100%; min-height: 280px; aspect-ratio: auto; padding: 18px; }
+  .cert-main h3 { font-size: clamp(2.35rem, 12vw, 3.25rem); overflow-wrap: anywhere; }
+  .cert-footer { grid-template-columns: 1fr 1fr; gap: 12px; }
+  .cert-footer > span:last-child { grid-column: 1 / -1; }
+
+  .beta-console { padding: 72px 16px calc(32px + env(safe-area-inset-bottom)); overflow: hidden; }
+  .composer-intro { margin-bottom: 24px; }
+  .composer-intro h2 { font-size: clamp(2.75rem, 13.5vw, 4rem); line-height: .9; }
+  .composer-intro > div > p { font-size: .96rem; line-height: 1.55; }
+  .mobile-flow-nav { position: relative; top: auto; z-index: 1; width: 100%; margin: 0 0 12px; display: grid; grid-template-columns: repeat(4, 1fr); overflow: hidden; }
+  .mobile-flow-nav span { min-width: 0; padding: 12px 5px; text-align: center; font-size: .43rem; white-space: nowrap; }
+  .composer-shell { width: 100%; min-height: 0; overflow: hidden; }
+  .composer-workspace { width: 100%; overflow: hidden; }
+  .composer-toolbar { width: 100%; grid-template-columns: minmax(0, 1fr) auto; padding: 10px; }
+  .composer-toolbar strong { max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ownership-canvas { width: 100%; padding: 28px 10px 18px; overflow: hidden; }
+  .owner-node { width: 100%; min-width: 0; }
+  .owner-node strong { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ownership-trunk { height: 30px; }
+  .successor-grid, .successor-grid.successor-count-1, .successor-grid.successor-count-3 { width: 100%; grid-template-columns: 1fr; gap: 10px; }
+  .successor-node { width: 100%; min-width: 0; padding: 14px 12px 30px; }
+  .successor-node input { min-height: 44px; margin: 8px 0; font-size: 16px; }
+  .remove-successor { min-height: 28px; padding: 4px 6px; }
+  .successor-controls { width: 100%; margin-top: 14px; gap: 8px; }
+  .successor-controls button { min-height: 46px; flex: 1; }
+  .allocation-rule { width: 100%; }
+  .plan-document { width: auto; margin: 0 10px 10px; }
+  .document-head { gap: 12px; font-size: .5rem; }
+  .document-grid { grid-template-columns: 1fr; }
+  .create-plan-action { position: relative; bottom: auto; z-index: 1; min-height: 54px; }
+  .execution-strip { width: 100%; display: block; margin-top: 12px; overflow: hidden; }
+  .execution-strip article { width: 100%; min-height: 0; padding: 20px 14px; }
+  .execution-strip h3 { font-size: 1.65rem; margin: 12px 0 18px; }
+  .execution-strip input { min-height: 46px; font-size: 16px; }
+  .execution-strip button { min-height: 52px; margin-top: 18px; }
+  .beta-feedback { width: 100%; padding-bottom: 0; overflow-wrap: anywhere; }
+  .beta-feedback a { max-width: 100%; overflow-wrap: anywhere; }
+
+  .principle { min-height: auto; padding: 72px 16px 42px; }
+  .principle h2 { font-size: clamp(2.7rem, 13vw, 4rem); }
+}
+
+@media (max-width: 380px) {
+  .hero h1 { font-size: 3.25rem; }
+  .header-wallet { max-width: 128px; }
+  .composer-toolbar strong { max-width: 118px; }
+  .lifecycle .story-copy h2 { font-size: 2.25rem; }
+  .lifecycle .body-copy { font-size: .84rem; }
+}
