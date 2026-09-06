@@ -1,18 +1,30 @@
 "use client";
 
-import { CDPReactProvider } from "@coinbase/cdp-react";
+import { PrivyProvider } from "@privy-io/react-auth";
 import { createContext, useContext } from "react";
+import { baseSepolia } from "viem/chains";
 
 const KynloAccountContext = createContext({ configured: false });
 
-export function KynloAccountProvider({ children, projectId }: { children: React.ReactNode; projectId: string }) {
-  if (!projectId) {
+export function KynloAccountProvider({ children, appId }: { children: React.ReactNode; appId: string }) {
+  if (!appId) {
     return <KynloAccountContext.Provider value={{ configured: false }}>{children}</KynloAccountContext.Provider>;
   }
 
-  return <CDPReactProvider config={{ projectId, appName: "Kynlo", authMethods: ["email", "siwe:base"], ethereum: { createOnLogin: "smart" } }}>
+  return <PrivyProvider appId={appId} config={{
+    loginMethods: ["email", "wallet"],
+    supportedChains: [baseSepolia],
+    defaultChain: baseSepolia,
+    appearance: {
+      theme: "#f2eee4",
+      accentColor: "#11110f",
+      landingHeader: "Enter Kynlo",
+      loginMessage: "Continue with email or your wallet.",
+    },
+    embeddedWallets: { ethereum: { createOnLogin: "users-without-wallets" } },
+  }}>
     <KynloAccountContext.Provider value={{ configured: true }}>{children}</KynloAccountContext.Provider>
-  </CDPReactProvider>;
+  </PrivyProvider>;
 }
 
 export function useKynloAccountConfiguration() {

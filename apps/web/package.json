@@ -16,10 +16,8 @@
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
-    "@coinbase/cdp-core": "^0.0.123",
-    "@coinbase/cdp-hooks": "^0.0.123",
-    "@coinbase/cdp-react": "^0.0.123",
     "@hookform/resolvers": "^5.7.1",
+    "@privy-io/react-auth": "^3.40.0",
     "@shadcn/react": "^0.3.0",
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",

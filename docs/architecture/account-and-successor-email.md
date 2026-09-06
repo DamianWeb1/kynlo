@@ -2,12 +2,12 @@
 
 ## Kynlo accounts
 
-Kynlo uses Coinbase CDP for public account entry.
+Kynlo uses Privy for public account entry.
 
-- Email signup verifies a one-time code and creates a smart wallet.
-- Wallet signup verifies a SIWE signature and then requires a verified email before the account is complete.
+- Email signup verifies a one-time code and creates an embedded wallet.
+- Wallet signup verifies a wallet signature and then requires a verified email before the account is complete.
 - A verified email is an account and recovery contact. It is not a custody key and cannot sign a transaction.
-- The production Site requires `NEXT_PUBLIC_CDP_PROJECT_ID` and the published Kynlo domain in the CDP allowlist.
+- The production Site requires `NEXT_PUBLIC_PRIVY_APP_ID` and the published Kynlo domain in Privy's allowed origins.
 
 ## Successor contacts
 

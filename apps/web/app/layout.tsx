@@ -21,11 +21,11 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const cdpProjectId = process.env.NEXT_PUBLIC_CDP_PROJECT_ID?.trim() ?? "";
+  const privyAppId = process.env.NEXT_PUBLIC_PRIVY_APP_ID?.trim() ?? "";
 
   return (
     <html lang="en">
-      <body className="antialiased"><KynloAccountProvider projectId={cdpProjectId}>{children}</KynloAccountProvider></body>
+      <body className="antialiased"><KynloAccountProvider appId={privyAppId}>{children}</KynloAccountProvider></body>
     </html>
   );
 }

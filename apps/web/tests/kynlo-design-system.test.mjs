@@ -52,13 +52,14 @@ test("supports email and wallet Kynlo accounts with verified email", async () =>
   const layout = await readFile(new URL("../app/layout.tsx", import.meta.url), "utf8");
   const access = await readFile(new URL("../components/kynlo/account-access.tsx", import.meta.url), "utf8");
 
-  assert.match(layout, /projectId=\{cdpProjectId\}/);
-  assert.match(provider, /createOnLogin:\s*"smart"/);
-  assert.match(provider, /authMethods:\s*\["email",\s*"siwe:base"\]/);
-  assert.match(access, /useSignInWithEmail/);
-  assert.match(access, /useSignInWithSiwe/);
-  assert.match(access, /useLinkEmail/);
-  assert.match(access, /Wallet verified\. Add your email/);
+  assert.match(layout, /appId=\{privyAppId\}/);
+  assert.match(provider, /createOnLogin:\s*"users-without-wallets"/);
+  assert.match(provider, /loginMethods:\s*\["email",\s*"wallet"\]/);
+  assert.match(provider, /supportedChains:\s*\[baseSepolia\]/);
+  assert.match(access, /usePrivy/);
+  assert.match(access, /useWallets/);
+  assert.match(access, /linkEmail/);
+  assert.match(access, /Wallet accounts link an email/);
 });
 
 test("assigns Successors without a pre-Seal approval transaction", async () => {
