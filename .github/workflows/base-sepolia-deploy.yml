@@ -73,8 +73,8 @@ jobs:
           forge clean
           forge build
           forge test -vvv
-          rg 'MIN_INACTIVITY_PERIOD = 90 days' src/KynloVault.sol
-          rg 'MIN_PROTECTION_WINDOW = 30 days' src/KynloVault.sol
+          grep -F 'MIN_INACTIVITY_PERIOD = 90 days' src/KynloVault.sol
+          grep -F 'MIN_PROTECTION_WINDOW = 30 days' src/KynloVault.sol
 
       - name: Validate Base Sepolia configuration and signers
         shell: bash
