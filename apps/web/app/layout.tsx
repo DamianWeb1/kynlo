@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./kynlo-base.css";
 import "./kynlo-tokens.css";
+import "./mobile-overrides.css";
 
 export const metadata: Metadata = {
   title: "Kynlo | Your assets have a future",
