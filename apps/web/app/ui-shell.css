@@ -7,21 +7,22 @@
 .header-wallet > span { width: 6px; height: 6px; border-radius: 999px; background: rgba(245,241,230,.38); }
 .header-wallet > .wallet-live { background: var(--kynlo-signal); box-shadow: 0 0 0 4px rgba(196,255,79,.1); }
 
-.asset-library { min-height: 100vh; padding: 12vh var(--kynlo-section-gutter); background: var(--kynlo-bone); border-top: 1px solid var(--kynlo-line); border-bottom: 1px solid var(--kynlo-line); display: grid; grid-template-columns: .8fr 1.2fr; gap: 7vw; align-items: start; }
-.asset-intro { position: sticky; top: 11vh; }
+.asset-library { min-height: 82vh; padding: 12vh var(--kynlo-section-gutter); background: var(--kynlo-bone); border-top: 1px solid var(--kynlo-line); border-bottom: 1px solid var(--kynlo-line); display: grid; grid-template-columns: .8fr 1.2fr; gap: 7vw; align-items: center; }
 .asset-intro h2 { margin: 20px 0 30px; font-family: var(--kynlo-font-display); font-size: clamp(3rem, 5.4vw, 6rem); font-weight: 400; line-height: .92; letter-spacing: -.05em; }
 .asset-intro h2 em { color: var(--kynlo-signal-dark, #657a23); font-weight: 400; }
 .asset-intro > p:last-child { max-width: 470px; font-family: var(--kynlo-font-display); font-size: 1.12rem; line-height: 1.65; color: var(--kynlo-copy); }
-.stock-grid { border-top: 1px solid var(--kynlo-ink); }
-.stock-record { min-height: 86px; display: grid; grid-template-columns: 42px 1fr auto; gap: 18px; align-items: center; border-bottom: 1px solid var(--kynlo-line); transition: padding 180ms ease, background 180ms ease; }
-.stock-record:hover { padding: 0 14px; background: rgba(20,20,18,.035); }
-.stock-record > span, .stock-record > b, .stock-record small { font-size: 9px; letter-spacing: .14em; font-weight: 500; }
-.stock-record > span { color: var(--kynlo-meta); }
-.stock-record > div { display: flex; align-items: baseline; gap: 18px; }
-.stock-record strong { min-width: 86px; font-family: var(--kynlo-font-display); font-size: 1.7rem; font-weight: 400; letter-spacing: -.03em; }
-.stock-record small { color: var(--kynlo-meta); }
-.stock-record > b { border: 1px solid var(--kynlo-line); padding: 7px 9px; }
-.asset-note { grid-column: 2; margin: 4px 0 0; font-size: 8px; letter-spacing: .13em; color: var(--kynlo-meta); line-height: 1.6; }
+.asset-selector-shell { width: min(100%, 680px); justify-self: end; border-top: 1px solid var(--kynlo-ink); }
+.asset-select-label { display: grid; grid-template-columns: 120px 1fr; align-items: center; min-height: 88px; border-bottom: 1px solid var(--kynlo-line); }
+.asset-select-label > span { font-size: 9px; letter-spacing: .16em; color: var(--kynlo-meta); }
+.asset-select-label select { width: 100%; appearance: auto; border: 0; outline: 0; background: transparent; color: var(--kynlo-ink); font-family: var(--kynlo-font-display); font-size: clamp(1.4rem, 2.6vw, 2.2rem); cursor: pointer; }
+.selected-asset { min-height: 250px; padding: 32px 0; display: grid; grid-template-columns: 1fr auto; align-content: space-between; border-bottom: 1px solid var(--kynlo-ink); }
+.selected-asset > div { display: grid; gap: 6px; }
+.selected-asset small { font-size: 9px; letter-spacing: .16em; color: var(--kynlo-meta); }
+.selected-asset strong { margin-top: 18px; font-family: var(--kynlo-font-display); font-size: clamp(4rem, 8vw, 7rem); font-weight: 400; line-height: .75; letter-spacing: -.055em; }
+.selected-asset span { font-size: 11px; letter-spacing: .16em; }
+.selected-asset > b { align-self: start; border: 1px solid var(--kynlo-line); padding: 7px 9px; font-size: 9px; letter-spacing: .14em; font-weight: 500; }
+.selected-asset > p { grid-column: 1 / -1; max-width: 420px; margin: 38px 0 0; font-size: 10px; line-height: 1.6; color: var(--kynlo-meta); }
+.asset-note { grid-column: 2; margin: -4vw 0 0; font-size: 8px; letter-spacing: .13em; color: var(--kynlo-meta); line-height: 1.6; }
 
 .site-footer { background: #0e0f0d; color: var(--kynlo-bone); padding: 10vh var(--kynlo-section-gutter) 28px; }
 .footer-brand { display: flex; gap: 22px; align-items: flex-start; padding-bottom: 9vh; border-bottom: 1px solid rgba(245,241,230,.15); }
@@ -39,27 +40,29 @@
   .site-header { grid-template-columns: 1fr auto; }
   .site-nav, .site-header .network { display: none; }
   .header-right { gap: 0; }
-  .asset-library { grid-template-columns: 1fr; gap: 50px; }
-  .asset-intro { position: static; }
-  .asset-note { grid-column: 1; }
+  .asset-library { grid-template-columns: 1fr; gap: 48px; min-height: auto; }
+  .asset-selector-shell { width: 100%; justify-self: stretch; }
+  .asset-note { grid-column: 1; margin: 0; }
 }
 
 @media (max-width: 560px) {
-  .site-header { padding-left: 20px; padding-right: 20px; }
+  .site-header { position: absolute; height: 68px; padding-left: 16px; padding-right: 16px; }
   .brand { gap: 8px; }
   .brand .k-mark { width: 24px; height: 24px; }
   .brand span { font-size: 11px; }
-  .header-wallet { min-height: 38px; padding: 0 10px; font-size: 8px; }
-  .asset-library { padding: 82px 20px; }
-  .asset-intro h2 { font-size: 3.25rem; }
-  .stock-record { grid-template-columns: 28px 1fr auto; min-height: 76px; gap: 10px; }
-  .stock-record > div { display: block; }
-  .stock-record strong { display: block; font-size: 1.35rem; }
-  .stock-record small { display: block; margin-top: 4px; }
-  .site-footer { padding: 78px 20px 24px; }
-  .footer-brand { padding-bottom: 60px; }
+  .header-wallet { max-width: 150px; min-height: 38px; padding: 0 9px; font-size: 7px; overflow: hidden; white-space: nowrap; }
+  .asset-library { padding: 72px 16px; gap: 34px; overflow: hidden; }
+  .asset-intro h2 { margin: 16px 0 22px; font-size: clamp(2.8rem, 13vw, 3.7rem); }
+  .asset-intro > p:last-child { font-size: 1rem; line-height: 1.55; }
+  .asset-select-label { grid-template-columns: 1fr; gap: 8px; padding: 18px 0; min-height: 0; }
+  .asset-select-label select { min-height: 48px; font-size: 1.55rem; }
+  .selected-asset { min-height: 220px; padding: 26px 0; }
+  .selected-asset strong { font-size: clamp(4rem, 20vw, 5.6rem); }
+  .selected-asset > p { margin-top: 30px; }
+  .site-footer { padding: 70px 16px max(24px, env(safe-area-inset-bottom)); overflow: hidden; }
+  .footer-brand { padding-bottom: 52px; }
   .footer-brand .k-mark { width: 38px; height: 38px; }
-  .footer-links { justify-content: start; grid-template-columns: 1fr 1fr; gap: 28px; }
+  .footer-links { justify-content: start; grid-template-columns: 1fr; gap: 42px; }
   .footer-bottom { grid-template-columns: 1fr auto; gap: 12px; }
   .footer-bottom > span:nth-child(2) { display: none; }
 }
