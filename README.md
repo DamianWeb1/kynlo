@@ -2,6 +2,8 @@
 
 Kynlo is a protected inactivity and succession protocol for Coinbase Tokenized Stocks on Base.
 
+Website: [kynlo.xyz](https://kynlo.xyz)
+
 Status: product foundation and unaudited contract model. It is not cleared for deposits or Base mainnet deployment. Base mainnet is the production target. Base Sepolia is staging only.
 
 ## Architecture
