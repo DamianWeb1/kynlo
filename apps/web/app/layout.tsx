@@ -8,6 +8,7 @@ export const metadata: Metadata = {
   title: "Kynlo | Your assets have a future",
   description: "Protected succession instructions for Coinbase Tokenized Stocks on Base.",
   other: {
+    "base:app_id": "6a9e53cf5538a47d1b071b75",
     "codex-preview": "development",
   },
   icons: {
