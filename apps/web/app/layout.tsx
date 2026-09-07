@@ -6,7 +6,7 @@ import { KynloAccountProvider } from "@/components/kynlo/kynlo-account-provider"
 
 export const metadata: Metadata = {
   title: "Kynlo | Your assets have a future",
-  description: "Protected succession instructions for Coinbase Tokenized Stocks on Base.",
+  description: "Create a protected succession plan for onchain assets using Proof of Life and assigned Successors.",
   other: {
     "base:app_id": "6a9e53cf5538a47d1b071b75",
     "codex-preview": "development",
