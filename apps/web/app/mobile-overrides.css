@@ -2,14 +2,15 @@
   html, body { width: 100%; overflow-x: hidden; }
   main { width: 100%; overflow: clip; }
 
-  .hero { min-height: 100svh; padding: 112px 16px 32px; gap: 28px; }
+  .site-header.site-header { height: calc(68px + env(safe-area-inset-top)); min-height: calc(68px + env(safe-area-inset-top)); padding-top: env(safe-area-inset-top); }
+  .hero { min-height: 100svh; padding: calc(112px + env(safe-area-inset-top)) 16px 32px; gap: 28px; }
   .hero::after { width: 92vw; right: -52vw; top: 24vh; }
   .hero .eyebrow { max-width: 76%; line-height: 1.5; }
   .hero h1 { font-size: clamp(3.55rem, 18vw, 5.2rem); line-height: .84; overflow-wrap: normal; }
   .hero-bottom { width: 100%; gap: 28px; }
   .hero-bottom > p { max-width: 92%; font-size: 1rem; line-height: 1.5; }
   .primary-action { width: 100%; min-width: 0; min-height: 52px; align-items: center; }
-  .folio { top: 86px; right: 16px; }
+  .folio { top: calc(86px + env(safe-area-inset-top)); right: 16px; }
 
   .vault-preview { min-height: auto; padding: 72px 16px; gap: 42px; overflow: hidden; }
   .section-heading h2 { font-size: clamp(2.8rem, 13vw, 4rem); }
@@ -23,7 +24,7 @@
   .composer-intro { margin-bottom: 24px; }
   .composer-intro h2 { font-size: clamp(2.75rem, 13.5vw, 4rem); line-height: .9; }
   .composer-intro > div > p { font-size: .96rem; line-height: 1.55; }
-  .mobile-flow-nav { position: relative; top: auto; z-index: 1; width: 100%; margin: 0 0 12px; display: grid; grid-template-columns: repeat(4, 1fr); overflow: hidden; }
+  .mobile-flow-nav { position: relative; top: auto; z-index: 1; width: 100%; margin: 0 0 12px; display: grid; grid-template-columns: repeat(3, 1fr); overflow: hidden; }
   .mobile-flow-nav span { min-width: 0; padding: 12px 5px; text-align: center; font-size: .43rem; white-space: nowrap; }
   .composer-shell { width: 100%; min-height: 0; overflow: hidden; }
   .composer-workspace { width: 100%; overflow: hidden; }
