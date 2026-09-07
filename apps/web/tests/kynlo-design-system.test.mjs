@@ -47,6 +47,17 @@ test("reserves a separate lifecycle band for the resolved ownership graph", asyn
   assert.match(lifecycle, /ownership-graph\{width:min\(92vw,680px\);bottom:-20px\}/);
 });
 
+test("keeps the complete lifecycle and Composer usable on phones", async () => {
+  const page = await readFile(new URL("../app/page.tsx", import.meta.url), "utf8");
+  const lifecycle = await readFile(new URL("../app/lifecycle.css", import.meta.url), "utf8");
+  const mobile = await readFile(new URL("../app/mobile-overrides.css", import.meta.url), "utf8");
+
+  assert.match(page, /mobileMode && phase\.key === "resolved" \? 1/);
+  assert.match(lifecycle, /data-phase=resolved] \.ownership-graph\{display:block!important/);
+  assert.match(mobile, /grid-template-columns: repeat\(3, 1fr\)/);
+  assert.match(mobile, /safe-area-inset-top/);
+});
+
 test("supports email and wallet Kynlo accounts with verified email", async () => {
   const provider = await readFile(new URL("../components/kynlo/kynlo-account-provider.tsx", import.meta.url), "utf8");
   const layout = await readFile(new URL("../app/layout.tsx", import.meta.url), "utf8");
