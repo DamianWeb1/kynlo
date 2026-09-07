@@ -94,7 +94,7 @@ function BaseSepoliaBetaConfigured() {
   const planReady = successors.every((item) => addressPattern.test(item.wallet) && (!item.email || emailPattern.test(item.email)));
 
   return <section className="beta-console" id="beta" aria-label="Kynlo Base Sepolia beta">
-    <div className="composer-intro"><p className="eyebrow">LEGACY PLAN COMPOSER · BASE SEPOLIA</p><div><h2>Write the future of your ownership.</h2><p>Add up to three Successors, assign each receiving wallet, fund the Vault, then Seal. Contact emails are used only for Kynlo notices.</p></div></div>
+    <div className="composer-intro"><p className="eyebrow">LEGACY PLAN COMPOSER · BASE SEPOLIA</p><div><h2>Set your Legacy Plan.</h2><p>Name up to three Successors, assign exactly 100% across their receiving wallets, fund the Vault, then Seal. Contact emails are used only for Kynlo notices.</p></div></div>
     <div className="mobile-flow-nav"><span>01 COMPOSE</span><span>02 FUND</span><span>03 SEAL</span></div>
     <div className="composer-shell" id="legacy-plan">
       <aside className="composer-rail"><div className="rail-kicker">PLAN / {planId || "DRAFT"}</div><ol><li className="is-current"><span>01</span><b>Compose</b><small>Owner + Successors</small></li><li><span>02</span><b>Fund</b><small>Deposit asset</small></li><li><span>03</span><b>Seal</b><small>Activate plan</small></li></ol><div className="rail-status"><i className={ready ? "is-live" : ""} /><span>{checking ? "CHECKING CONTRACTS" : ready ? "READY ON BASE SEPOLIA" : authenticated ? "ACTION REQUIRED" : "SIGN IN REQUIRED"}</span></div></aside>
