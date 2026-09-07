@@ -12,13 +12,13 @@ import { AccountAccess } from "@/components/kynlo/account-access";
 
 type Phase = { key: KynloState; label: string; eyebrow: string; title: string; body: string; start: number; end: number; day: string };
 const phases: Phase[] = [
-  { key: "active", label: "Today", eyebrow: "Owner is present", title: "Your Legacy Plan is active.", body: "Proof of Life keeps the plan quiet. You remain in control and every ownership path stays closed.", start: 0, end: 0.2, day: "DAY 01" },
-  { key: "approaching", label: "Proof of Life", eyebrow: "Time is advancing", title: "The deadline approaches.", body: "Time moves through the plan. The lifecycle ring drains while your assets remain exactly where you left them.", start: 0.2, end: 0.4, day: "DAY 89" },
+  { key: "active", label: "Today", eyebrow: "Owner is present", title: "Your Legacy Plan is active.", body: "Record Proof of Life every 90 days. You remain in control and no Successor can claim.", start: 0, end: 0.2, day: "DAY 01" },
+  { key: "approaching", label: "Proof of Life", eyebrow: "Time is advancing", title: "The deadline approaches.", body: "The lifecycle ring drains as the check-in deadline approaches. Your assets remain exactly where you placed them.", start: 0.2, end: 0.4, day: "DAY 89" },
   { key: "missed", label: "Deadline missed", eyebrow: "Countdown reached zero", title: "PROOF OF LIFE MISSED", body: "The check-in deadline has passed. No asset transfers. No Successor can claim. Kynlo does not treat silence as proof of death.", start: 0.4, end: 0.5, day: "DAY 90" },
-  { key: "nothing", label: "Nothing moves", eyebrow: "Protected by design", title: "NOTHING MOVES.", body: "The Vault holds its position. Ownership does not move by a single unit while the protected recovery path opens.", start: 0.5, end: 0.59, day: "DAY 90" },
-  { key: "protection", label: "Protection Window", eyebrow: "Recovery remains open", title: "30 DAYS OF PROTECTION.", body: "The owner can still return and record Proof of Life. Successors are visible to the plan, but the assets remain unreachable.", start: 0.59, end: 0.72, day: "DAY 91 → 120" },
-  { key: "transition", label: "Succession Ready", eyebrow: "Protection completed", title: "SUCCESSION IS AVAILABLE.", body: "Only now does the sealed ownership map unlock. Assigned Successor wallets claim their recorded allocation, subject to issuer policy.", start: 0.72, end: 0.88, day: "DAY 120" },
-  { key: "resolved", label: "Ownership resolves", eyebrow: "Sealed plan · final state", title: "OWNERSHIP FINDS ITS PATH.", body: "The Vault resolves into the allocation you sealed. Every path is explicit, assigned and visible onchain.", start: 0.88, end: 1, day: "SUCCESSION" },
+  { key: "nothing", label: "Nothing moves", eyebrow: "Protected by design", title: "NOTHING MOVES.", body: "The Vault holds every deposited position while the recovery period opens. No Successor can claim yet.", start: 0.5, end: 0.59, day: "DAY 90" },
+  { key: "protection", label: "Protection Window", eyebrow: "Recovery remains open", title: "30 DAYS OF PROTECTION.", body: "You still have 30 days to return and record Proof of Life. Your assets remain locked from Successor claims.", start: 0.59, end: 0.72, day: "DAY 91 → 120" },
+  { key: "transition", label: "Succession Ready", eyebrow: "Protection completed", title: "SUCCESSION IS AVAILABLE.", body: "Only now can each assigned Successor claim their recorded allocation, subject to issuer policy.", start: 0.72, end: 0.88, day: "DAY 120" },
+  { key: "resolved", label: "Ownership resolves", eyebrow: "Sealed plan · final state", title: "OWNERSHIP FINDS ITS PATH.", body: "Each successful claim follows the allocation you sealed. Every receiving wallet and share remains explicit onchain.", start: 0.88, end: 1, day: "SUCCESSION" },
 ];
 const stocks = [["NVDA", "NVIDIA"], ["AAPL", "APPLE"], ["MSFT", "MICROSOFT"], ["AMZN", "AMAZON"], ["GOOGL", "ALPHABET"], ["META", "META"], ["TSLA", "TESLA"], ["COIN", "COINBASE"], ["NFLX", "NETFLIX"], ["AMD", "AMD"], ["AVGO", "BROADCOM"], ["PLTR", "PALANTIR"]] as const;
 const discreteAnchors = [0.08, 0.3, 0.45, 0.545, 0.655, 0.8, 0.92];
@@ -99,7 +99,7 @@ export default function Home() {
   return <main>
     <header className="site-header"><a className="brand" href="#top" aria-label="Kynlo home"><KynloMark priority /><span>KYNLO</span></a><nav className="site-nav" aria-label="Main navigation"><a href="#lifecycle">HOW IT WORKS</a><a href="#assets">ASSETS</a><a href="#beta">LEGACY PLAN</a></nav><div className="header-right"><div className="network"><i /> BASE SEPOLIA</div><HeaderWalletButton /></div></header>
 
-    <section className="hero" id="top"><div className="hero-spatial-axis" aria-hidden="true"><span>TIME ↓</span><span>OWNERSHIP →</span></div><p className="eyebrow">PROGRAMMABLE SUCCESSION · BASE</p><h1>YOUR ASSETS<br />HAVE A <em>FUTURE.</em></h1><div className="hero-bottom"><p>Set protected inheritance instructions for Coinbase Tokenized Stocks on Base.</p><a className="primary-action" href="#account">EMAIL OR WALLET SIGN IN <span>↘</span></a></div><div className="folio">KYNLO / 001</div></section>
+    <section className="hero" id="top"><div className="hero-spatial-axis" aria-hidden="true"><span>TIME ↓</span><span>OWNERSHIP →</span></div><p className="eyebrow">PROGRAMMABLE SUCCESSION · BASE SEPOLIA</p><h1>YOUR ASSETS<br />HAVE A <em>FUTURE.</em></h1><div className="hero-bottom"><p>Create a protected succession plan for your onchain assets. Stay in control through Proof of Life.</p><a className="primary-action" href="#account">EMAIL OR WALLET SIGN IN <span>↘</span></a></div><div className="folio">KYNLO / 001</div></section>
 
     <section className="lifecycle" id="lifecycle" ref={lifecycleRef} data-phase={phase.key} data-reduced-motion={reducedMotion} data-mobile={mobileMode}>
       <SpatialFrame className="sticky-story">
@@ -114,7 +114,7 @@ export default function Home() {
     </section>
 
     <section className="asset-library" id="assets">
-      <div className="asset-intro"><p className="eyebrow">THE ASSET LIBRARY</p><h2>Built for ownership,<br /><em>not speculation.</em></h2><p>Kynlo is designed around eligible Coinbase Tokenized Stocks on Base. The live Sepolia beta uses MOCK-B20 while production assets remain registry-gated.</p></div>
+      <div className="asset-intro"><p className="eyebrow">YOUR DIGITAL ESTATE</p><h2>Real assets.<br /><em>Real succession.</em></h2><p>Choose the assets your Legacy Plan will cover. This Base Sepolia beta uses MOCK-B20 assets for testing.</p></div>
       <div className="asset-selector-shell">
         <div className="asset-select-label" onKeyDown={(event) => { if (event.key === "Escape") setAssetMenuOpen(false); }}>
           <span>SELECT ASSET</span>
@@ -132,10 +132,10 @@ export default function Home() {
       <p className="asset-note">DISPLAY LIBRARY · PRODUCTION SUPPORT REQUIRES OFFICIAL REGISTRY ADMISSION AND ISSUER ELIGIBILITY</p>
     </section>
 
-    <section className="vault-preview"><div className="section-heading"><p className="eyebrow">THE LEGACY VAULT</p><h2>Ownership, held<br />with intention.</h2><p>No price charts. No speculation. Each position remains a recorded ownership certificate inside your Kynlo Vault.</p></div><div className="certificate-stack" aria-label="Illustrative ownership certificate"><article className="certificate"><div className="cert-top"><KynloMark /><span>KYNLO VAULT<br />CERTIFICATE 001</span></div><div className="cert-main"><p>COINBASE TOKENIZED STOCK</p><h3>{activeAsset[1]}</h3><strong>{activeAsset[0]}</strong></div><div className="cert-footer"><span>PLAN SHARE<br /><b>60.00%</b></span><span>NETWORK<br /><b>BASE</b></span><span>RECORD<br /><b>ILLUSTRATIVE</b></span></div></article></div></section>
+    <section className="vault-preview"><div className="section-heading"><p className="eyebrow">THE LEGACY VAULT</p><h2>Your assets,<br />recorded clearly.</h2><p>Your Kynlo Vault tracks each deposited position in raw token units. No price charts. No speculation.</p></div><div className="certificate-stack" aria-label="Illustrative ownership certificate"><article className="certificate"><div className="cert-top"><KynloMark /><span>KYNLO VAULT<br />CERTIFICATE 001</span></div><div className="cert-main"><p>MOCK TOKENIZED ASSET</p><h3>{activeAsset[1]}</h3><strong>{activeAsset[0]}</strong></div><div className="cert-footer"><span>PLAN SHARE<br /><b>60.00%</b></span><span>NETWORK<br /><b>BASE SEPOLIA</b></span><span>RECORD<br /><b>ILLUSTRATIVE</b></span></div></article></div></section>
     <AccountAccess />
     <BaseSepoliaBeta />
-    <section className="principle"><KynloMark /><p>Kynlo does not detect death.</p><h2>It executes a protected<br /><em>inactivity instruction.</em></h2><div className="legal-line">Coinbase Tokenized Stocks remain subject to issuer eligibility and transfer policies. Kynlo is not a legal-will replacement.</div></section>
+    <section className="principle"><KynloMark /><p>Kynlo does not detect death.</p><h2>It responds only<br /><em>to inactivity.</em></h2><div className="legal-line">Kynlo is not a legal will or a replacement for estate planning. Tokenized assets remain subject to issuer eligibility and transfer policies. Kynlo does not bypass those restrictions.</div></section>
     <footer className="site-footer"><div className="footer-brand"><KynloMark /><div><strong>KYNLO</strong><p>YOUR ASSETS HAVE A FUTURE.</p></div></div><div className="footer-links"><div><small>EXPLORE</small><a href="#lifecycle">How it works</a><a href="#assets">Assets</a><a href="#beta">Base Sepolia Beta</a></div><div><small>NETWORK</small><span>Base Sepolia · 84532</span><span>Testnet only</span><span>Mainnet disabled</span></div></div><div className="footer-bottom"><span>© 2026 KYNLO</span><span>PROGRAMMABLE SUCCESSION FOR ONCHAIN ASSETS</span><a href="#top">BACK TO TOP ↑</a></div></footer>
   </main>;
 }
