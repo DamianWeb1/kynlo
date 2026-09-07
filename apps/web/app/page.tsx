@@ -80,7 +80,7 @@ export default function Home() {
   }, [mobileMode]);
 
   const phase = useMemo(() => phases.find((item) => progress >= item.start && progress < item.end) ?? phases.at(-1)!, [progress]);
-  const successionReveal = progress < 0.78 ? 0 : progress >= 0.96 ? 1 : rangeProgress(progress, 0.78, 0.96);
+  const successionReveal = mobileMode && phase.key === "resolved" ? 1 : progress < 0.78 ? 0 : progress >= 0.96 ? 1 : rangeProgress(progress, 0.78, 0.96);
   const phaseIndex = phases.indexOf(phase);
   const activeAsset = stocks.find(([ticker]) => ticker === selectedAsset) ?? stocks[0];
 
