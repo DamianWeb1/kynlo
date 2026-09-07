@@ -12,8 +12,21 @@ function AccountAccessConfigured() {
   const { ready, authenticated, user, login, logout, linkEmail, linkWallet } = usePrivy();
   const { wallets, ready: walletsReady } = useWallets();
   const [mode, setMode] = useState<"email" | "wallet">("email");
+  const [copied, setCopied] = useState(false);
   const verifiedEmail = user?.email?.address ?? "";
   const primaryWallet = wallets.find((wallet) => wallet.walletClientType === "privy") ?? wallets[0];
+  const primaryWalletAddress = primaryWallet?.address ?? user?.wallet?.address ?? "";
+
+  const copyWallet = async () => {
+    if (!primaryWalletAddress) return;
+    try {
+      await navigator.clipboard.writeText(primaryWalletAddress);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1800);
+    } catch {
+      setCopied(false);
+    }
+  };
 
   if (!ready || !walletsReady) {
     return <section className="account-access account-unconfigured" id="account" aria-busy="true">
@@ -29,7 +42,7 @@ function AccountAccessConfigured() {
         <div><p className="eyebrow">KYNLO ACCOUNT</p><h2>Your identity and ownership stay connected.</h2></div>
         <dl>
           <div><dt>VERIFIED EMAIL</dt><dd>{verifiedEmail}</dd></div>
-          <div><dt>PRIMARY WALLET</dt><dd>{short(primaryWallet?.address ?? user?.wallet?.address ?? "")}</dd></div>
+          <div><dt>PRIMARY WALLET</dt><dd className="wallet-copy-row"><button type="button" className="wallet-address-copy" onClick={() => void copyWallet()} disabled={!primaryWalletAddress} aria-label={primaryWalletAddress ? `Copy wallet address ${primaryWalletAddress}` : "Wallet address pending"}><span>{short(primaryWalletAddress)}</span><b>{copied ? "COPIED" : "COPY"}</b></button></dd></div>
           <div><dt>NETWORK</dt><dd>BASE SEPOLIA</dd></div>
         </dl>
       </div>
