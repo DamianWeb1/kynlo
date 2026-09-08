@@ -7,6 +7,11 @@ on:
         description: Type DEPLOY_BASE_SEPOLIA to authorize the staging broadcast
         required: true
         type: string
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/base-sepolia-deploy.yml
 
 permissions:
   actions: read
@@ -27,6 +32,7 @@ jobs:
 
     steps:
       - name: Validate explicit authorization
+        if: github.event_name == 'workflow_dispatch'
         env:
           CONFIRMATION: ${{ inputs.confirmation }}
         run: test "$CONFIRMATION" = "DEPLOY_BASE_SEPOLIA"
@@ -44,10 +50,22 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          conclusion=$(gh api \
-            "/repos/$GITHUB_REPOSITORY/actions/workflows/contracts-ci.yml/runs?head_sha=$KYNLO_SOURCE_COMMIT&status=completed&per_page=10" \
-            --jq '.workflow_runs[0].conclusion // "missing"')
-          test "$conclusion" = "success"
+          for attempt in $(seq 1 80); do
+            conclusion=$(gh api \
+              "/repos/$GITHUB_REPOSITORY/actions/workflows/contracts-ci.yml/runs?head_sha=$KYNLO_SOURCE_COMMIT&status=completed&per_page=10" \
+              --jq '.workflow_runs[0].conclusion // "missing"')
+            if [[ "$conclusion" = "success" ]]; then
+              exit 0
+            fi
+            if [[ "$conclusion" != "missing" ]]; then
+              echo "Contract security gate finished with: $conclusion" >&2
+              exit 1
+            fi
+            echo "Waiting for contract security gate, attempt $attempt of 80"
+            sleep 15
+          done
+          echo "Contract security gate did not complete in time" >&2
+          exit 1
 
       - name: Set up Node.js
         uses: actions/setup-node@v6
