@@ -2,28 +2,28 @@
   "network": "base-sepolia",
   "chainId": 84532,
   "status": "deployed",
-  "sourceCommit": "065984dde29c2e05e6f6667e3001031f0f8add25",
+  "sourceCommit": "02ea33c344944bdfe49a2cf37fe58dfdef50aff7",
   "deployer": "0x6831B89d6dE59441955720A775aC5BB7B5D6A8de",
   "registryAdmin": "0x6831B89d6dE59441955720A775aC5BB7B5D6A8de",
-  "deployedAt": "2026-09-06T07:47:35.143Z",
+  "deployedAt": "2026-09-08T08:26:32.744Z",
   "assets": {
     "classification": "MOCK",
     "officialCoinbaseAssets": false,
     "mockB20PolicyAsset": {
-      "address": "0x405ce45bca33d84d9754e955726b4a6be0b76947",
-      "transactionHash": "0xc14da24cfa6b6e64662ff09ee017f7b3d12df0d0901f937133a660b4c3541b2e",
-      "blockNumber": 46456269
+      "address": "0xe37e2d655600690bd416b821a6dedc407d13fd29",
+      "transactionHash": "0x2c746ebf2c6b34bd43fc9323c80ae43fe638bbc07fe82154df80bcb048c8ddd8",
+      "blockNumber": 46543841
     }
   },
   "kynloAssetRegistry": {
-    "address": "0x17464f19349d6a3a72b48b3d664fec7c4a4bc528",
-    "transactionHash": "0x85180bea7799e82ac11d51cc8ac4f661530caa388185580b6c92a4c2b00f9a90",
-    "blockNumber": 46456267
+    "address": "0x7a7a24163af14050d21ede38082b9fb101ab19fd",
+    "transactionHash": "0xbfacc11b94d5592122a17ccf7b53a17c51365be0a2b5fcf150be0034512589b8",
+    "blockNumber": 46543839
   },
   "kynloVault": {
-    "address": "0xff5284d7c47bef6d1fc1480d03cef47d0d1c4cc0",
-    "transactionHash": "0x44da9aa6fa0378c6b08e11cc2037ed5fcba1d2003633a7d87623290a49da8f84",
-    "blockNumber": 46456268
+    "address": "0xe2748286ea7aac6340084df8d847580d9b98f57e",
+    "transactionHash": "0x87cffce8724adeff5bc4d8ad44c9959c73e9ce07ef723d299f65011bc100b447",
+    "blockNumber": 46543840
   },
   "sourceVerified": false
 }
