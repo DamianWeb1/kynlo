@@ -74,11 +74,12 @@ test("supports email and wallet Kynlo accounts with verified email", async () =>
 });
 
 test("assigns Successors without a pre-Seal approval transaction", async () => {
-  const composer = await readFile(new URL("../components/kynlo/base-sepolia-beta.tsx", import.meta.url), "utf8");
+  const composer = await readFile(new URL("../components/kynlo/base-sepolia-beta-v2.tsx", import.meta.url), "utf8");
 
   assert.match(composer, /CONTACT EMAIL · OPTIONAL/);
-  assert.match(composer, /WALLET SETUP REQUIRED/);
-  assert.match(composer, /Assigned Successors do not approve the plan/);
+  assert.match(composer, /AWAITING WALLET/);
+  assert.match(composer, /Hold to Seal/);
+  assert.match(composer, /Proof of Life/);
   assert.doesNotMatch(composer, /acceptSuccessor/);
   assert.doesNotMatch(composer, /ACCEPT AS CONNECTED WALLET/);
 });
