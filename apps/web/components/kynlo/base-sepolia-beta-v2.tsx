@@ -8,7 +8,7 @@ import "./base-sepolia-beta-status.css";
 
 const CHAIN_ID="0x14a34";
 const CHAIN={chainId:CHAIN_ID,chainName:"Base Sepolia",nativeCurrency:{name:"Ether",symbol:"ETH",decimals:18},rpcUrls:["https://sepolia.base.org"],blockExplorerUrls:["https://sepolia.basescan.org"]};
-export const KYNLO_BASE_SEPOLIA={registry:"0x17464F19349d6a3A72b48b3d664fEc7C4a4Bc528",vault:"0xff5284D7c47beF6D1fC1480d03CEF47d0d1c4CC0",mockAsset:"0x405ce45BcA33D84D9754e955726b4A6be0b76947"} as const;
+export const KYNLO_BASE_SEPOLIA={registry:"0x7A7a24163aF14050D21eDe38082b9fb101aB19FD",vault:"0xE2748286Ea7Aac6340084df8D847580D9b98F57E",mockAsset:"0xE37E2D655600690bd416B821A6dedc407D13FD29"} as const;
 type Provider={request(args:{method:string;params?:unknown[]}):Promise<unknown>;on?:(e:string,l:(...a:unknown[])=>void)=>void;removeListener?:(e:string,l:(...a:unknown[])=>void)=>void};
 type Draft={id:number;wallet:string;email:string};
 type Snapshot={owner:string;state:number;armed:boolean;hasAssets:boolean;lastCheckIn:bigint};
